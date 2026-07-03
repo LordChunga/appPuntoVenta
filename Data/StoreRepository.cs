@@ -108,6 +108,77 @@ public sealed class StoreRepository(Database database)
             """, product);
     }
 
+    public async Task<ProductImportResult> ImportProductsAsync(IEnumerable<ProductImportRow> products)
+    {
+        using var connection = database.CreateConnection();
+        connection.Open();
+        using var transaction = connection.BeginTransaction();
+
+        var importedProducts = 0;
+        var skippedProducts = 0;
+        var createdCategories = 0;
+
+        foreach (var product in products)
+        {
+            var internalCode = product.Id.ToString();
+            var exists = await connection.ExecuteScalarAsync<int>("""
+                SELECT COUNT(1)
+                FROM Products
+                WHERE Id = @Id
+                   OR Barcode = @Barcode COLLATE NOCASE
+                   OR InternalCode = @InternalCode COLLATE NOCASE
+                   OR Name = @Name COLLATE NOCASE;
+                """, new
+                {
+                    product.Id,
+                    product.Barcode,
+                    InternalCode = internalCode,
+                    product.Name
+                }, transaction);
+
+            if (exists > 0)
+            {
+                skippedProducts++;
+                continue;
+            }
+
+            var categoryName = product.CategoryName.Trim();
+            var categoryId = await connection.QuerySingleOrDefaultAsync<int?>(
+                "SELECT Id FROM Categories WHERE Name = @Name COLLATE NOCASE;",
+                new { Name = categoryName },
+                transaction);
+
+            if (categoryId is null)
+            {
+                var newCategoryId = await connection.ExecuteScalarAsync<long>(
+                    "INSERT INTO Categories (Name) VALUES (@Name); SELECT last_insert_rowid();",
+                    new { Name = categoryName },
+                    transaction);
+
+                categoryId = (int)newCategoryId;
+                createdCategories++;
+            }
+
+            await connection.ExecuteAsync("""
+                INSERT INTO Products (Id, Barcode, InternalCode, Name, SalePrice, Stock, CategoryId)
+                VALUES (@Id, @Barcode, @InternalCode, @Name, @SalePrice, 0, @CategoryId);
+                """, new
+                {
+                    product.Id,
+                    product.Barcode,
+                    InternalCode = internalCode,
+                    product.Name,
+                    product.SalePrice,
+                    CategoryId = categoryId.Value
+                }, transaction);
+
+            importedProducts++;
+        }
+
+        transaction.Commit();
+        return new ProductImportResult(importedProducts, skippedProducts, createdCategories, 0);
+    }
+
     public async Task DeleteProductAsync(int productId)
     {
         using var connection = database.CreateConnection();

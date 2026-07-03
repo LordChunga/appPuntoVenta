@@ -471,10 +471,21 @@
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
 
-                    <StackPanel Margin="0,0,0,24">
-                        <TextBlock Text="Productos" FontSize="32" FontWeight="Bold" />
-                        <TextBlock Text="Alta, edicion y baja de productos." Foreground="{StaticResource MutedTextBrush}" Margin="0,6,0,0" />
-                    </StackPanel>
+                    <Grid Margin="0,0,0,24">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <TextBlock Text="Productos" FontSize="32" FontWeight="Bold" />
+                            <TextBlock Text="Alta, edicion y baja de productos." Foreground="{StaticResource MutedTextBrush}" Margin="0,6,0,0" />
+                        </StackPanel>
+                        <Button Grid.Column="1"
+                                Content="+ Importar archivo"
+                                Style="{StaticResource PrimaryButton}"
+                                VerticalAlignment="Top"
+                                Command="{Binding ImportProductsCommand}" />
+                    </Grid>
 
                     <Grid Grid.Row="1">
                         <Grid.ColumnDefinitions>

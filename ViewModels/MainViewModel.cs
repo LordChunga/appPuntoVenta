@@ -3,6 +3,7 @@ using System.Collections.Specialized;
 using System.ComponentModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Win32;
 using MiniPosWpf.Data;
 using MiniPosWpf.Models;
 
@@ -227,6 +228,39 @@ public sealed partial class MainViewModel : ObservableObject
     }
 
     private bool CanDeleteProduct() => EditingProductId > 0;
+
+    [RelayCommand]
+    private async Task ImportProductsAsync()
+    {
+        var dialog = new OpenFileDialog
+        {
+            Title = "Importar productos",
+            Filter = "Archivos Excel (*.xlsx)|*.xlsx",
+            Multiselect = false
+        };
+
+        if (dialog.ShowDialog() != true)
+        {
+            return;
+        }
+
+        try
+        {
+            var rows = XlsxProductImporter.ReadProducts(dialog.FileName, out var invalidRows);
+            var result = await repository.ImportProductsAsync(rows);
+
+            await RefreshCategoriesAsync();
+            await SearchProductsAsync();
+            await SearchPurchaseProductsAsync();
+            ClearProductForm();
+
+            StatusMessage = $"Importados: {result.ImportedProducts}. Omitidos: {result.SkippedProducts}. Categorias nuevas: {result.CreatedCategories}. Filas invalidas: {invalidRows}.";
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"No se pudo importar el archivo: {ex.Message}";
+        }
+    }
 
     [RelayCommand]
     private async Task SearchProductsAsync()
