@@ -1,4 +1,6 @@
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
+using System.ComponentModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MiniPosWpf.Data;
@@ -18,6 +20,12 @@ public sealed partial class MainViewModel : ObservableObject
 
     [ObservableProperty]
     private ObservableCollection<Product> products = [];
+
+    [ObservableProperty]
+    private ObservableCollection<Product> saleProductResults = [];
+
+    [ObservableProperty]
+    private ObservableCollection<Product> purchaseProducts = [];
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(SaveProductCommand))]
@@ -59,6 +67,12 @@ public sealed partial class MainViewModel : ObservableObject
     private string inventorySearchText = string.Empty;
 
     [ObservableProperty]
+    private string saleProductSearchText = string.Empty;
+
+    [ObservableProperty]
+    private string purchaseProductSearchText = string.Empty;
+
+    [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(ConfirmPurchaseCommand))]
     private Product? purchaseProduct;
 
@@ -83,7 +97,7 @@ public sealed partial class MainViewModel : ObservableObject
     public MainViewModel(StoreRepository repository)
     {
         this.repository = repository;
-        Cart.CollectionChanged += (_, _) => RefreshTotals();
+        Cart.CollectionChanged += OnCartCollectionChanged;
     }
 
     partial void OnSelectedProductChanged(Product? value)
@@ -107,11 +121,23 @@ public sealed partial class MainViewModel : ObservableObject
         _ = SearchProductsAsync();
     }
 
+    partial void OnSaleProductSearchTextChanged(string value)
+    {
+        _ = SearchSaleProductsAsync();
+    }
+
+    partial void OnPurchaseProductSearchTextChanged(string value)
+    {
+        _ = SearchPurchaseProductsAsync();
+    }
+
     [RelayCommand]
     public async Task LoadAsync()
     {
         await RefreshCategoriesAsync();
         await SearchProductsAsync();
+        await SearchSaleProductsAsync();
+        await SearchPurchaseProductsAsync();
         SelectedCategory ??= Categories.FirstOrDefault();
         StatusMessage = "Datos cargados.";
     }
@@ -142,6 +168,7 @@ public sealed partial class MainViewModel : ObservableObject
             StatusMessage = EditingProductId == 0 ? "Producto creado." : "Producto actualizado.";
             ClearProductForm();
             await SearchProductsAsync();
+            await SearchPurchaseProductsAsync();
         }
         catch (Exception ex)
         {
@@ -193,6 +220,7 @@ public sealed partial class MainViewModel : ObservableObject
             await repository.DeleteProductAsync(EditingProductId);
             ClearProductForm();
             await SearchProductsAsync();
+            await SearchPurchaseProductsAsync();
             StatusMessage = "Producto eliminado.";
         }
         catch (Exception ex)
@@ -211,7 +239,33 @@ public sealed partial class MainViewModel : ObservableObject
 
         if (PurchaseProduct is not null)
         {
-            PurchaseProduct = Products.FirstOrDefault(product => product.Id == PurchaseProduct.Id);
+            PurchaseProduct = PurchaseProducts.FirstOrDefault(product => product.Id == PurchaseProduct.Id);
+        }
+    }
+
+    [RelayCommand]
+    private async Task SearchSaleProductsAsync()
+    {
+        if (string.IsNullOrWhiteSpace(SaleProductSearchText))
+        {
+            SaleProductResults = new ObservableCollection<Product>();
+            return;
+        }
+
+        var rows = await repository.SearchProductsAsync(SaleProductSearchText);
+        SaleProductResults = new ObservableCollection<Product>(rows);
+    }
+
+    [RelayCommand]
+    private async Task SearchPurchaseProductsAsync()
+    {
+        var currentProductId = PurchaseProduct?.Id;
+        var rows = await repository.SearchProductsAsync(PurchaseProductSearchText);
+        PurchaseProducts = new ObservableCollection<Product>(rows);
+
+        if (currentProductId is not null)
+        {
+            PurchaseProduct = PurchaseProducts.FirstOrDefault(product => product.Id == currentProductId);
         }
     }
 
@@ -227,6 +281,7 @@ public sealed partial class MainViewModel : ObservableObject
         StatusMessage = $"Stock ingresado: {PurchaseProduct.Name} +{PurchaseQuantity}.";
         PurchaseQuantity = 1;
         await SearchProductsAsync();
+        await SearchPurchaseProductsAsync();
     }
 
     private bool CanConfirmPurchase() => PurchaseProduct is not null && PurchaseQuantity > 0;
@@ -240,6 +295,20 @@ public sealed partial class MainViewModel : ObservableObject
         if (product is null)
         {
             StatusMessage = "No se encontró un producto con ese código.";
+            return;
+        }
+
+        AddProductToCart(product);
+        SaleCode = string.Empty;
+    }
+
+    private bool CanAddCodeToCart() => !string.IsNullOrWhiteSpace(SaleCode);
+
+    [RelayCommand]
+    private void AddProductToCart(Product? product)
+    {
+        if (product is null)
+        {
             return;
         }
 
@@ -261,12 +330,22 @@ public sealed partial class MainViewModel : ObservableObject
             RefreshTotals();
         }
 
-        SaleCode = string.Empty;
         StatusMessage = $"{product.Name} agregado al carrito.";
         ConfirmSaleCommand.NotifyCanExecuteChanged();
     }
 
-    private bool CanAddCodeToCart() => !string.IsNullOrWhiteSpace(SaleCode);
+    [RelayCommand]
+    private void RemoveCartItem(CartItem? item)
+    {
+        if (item is null)
+        {
+            return;
+        }
+
+        Cart.Remove(item);
+        StatusMessage = $"{item.Name} eliminado del carrito.";
+        ConfirmSaleCommand.NotifyCanExecuteChanged();
+    }
 
     [RelayCommand(CanExecute = nameof(CanConfirmSale))]
     private async Task ConfirmSaleAsync()
@@ -276,6 +355,7 @@ public sealed partial class MainViewModel : ObservableObject
             await repository.ConfirmSaleAsync(Cart);
             Cart.Clear();
             await SearchProductsAsync();
+            await SearchPurchaseProductsAsync();
             StatusMessage = "Venta confirmada.";
             ConfirmSaleCommand.NotifyCanExecuteChanged();
         }
@@ -318,5 +398,35 @@ public sealed partial class MainViewModel : ObservableObject
         OnPropertyChanged(nameof(Subtotal));
         OnPropertyChanged(nameof(Total));
         OnPropertyChanged(nameof(ItemsCount));
+    }
+
+    private void OnCartCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        if (e.OldItems is not null)
+        {
+            foreach (CartItem item in e.OldItems)
+            {
+                item.PropertyChanged -= OnCartItemPropertyChanged;
+            }
+        }
+
+        if (e.NewItems is not null)
+        {
+            foreach (CartItem item in e.NewItems)
+            {
+                item.PropertyChanged += OnCartItemPropertyChanged;
+            }
+        }
+
+        RefreshTotals();
+    }
+
+    private void OnCartItemPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName is nameof(CartItem.Quantity) or nameof(CartItem.LineTotal))
+        {
+            RefreshTotals();
+            ConfirmSaleCommand.NotifyCanExecuteChanged();
+        }
     }
 }

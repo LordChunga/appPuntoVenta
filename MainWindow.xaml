@@ -87,6 +87,31 @@
             <Setter Property="MinHeight" Value="42" />
         </Style>
 
+        <Style TargetType="ComboBoxItem">
+            <Setter Property="Background" Value="{StaticResource InputBackground}" />
+            <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+            <Setter Property="Padding" Value="12,8" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ComboBoxItem">
+                        <Border x:Name="ItemBorder"
+                                Background="{TemplateBinding Background}"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsHighlighted" Value="True">
+                                <Setter TargetName="ItemBorder" Property="Background" Value="{StaticResource AccentSoftBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="ItemBorder" Property="Background" Value="{StaticResource AccentBrush}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
         <Style TargetType="ListBox">
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="BorderThickness" Value="0" />
@@ -238,7 +263,9 @@
                         <Grid>
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto" />
-                                <RowDefinition Height="20" />
+                                <RowDefinition Height="16" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="16" />
                                 <RowDefinition Height="*" />
                             </Grid.RowDefinitions>
 
@@ -249,28 +276,84 @@
                                         <ColumnDefinition Width="12" />
                                         <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
-                                    <TextBox Text="{Binding SaleCode, UpdateSourceTrigger=PropertyChanged}"
-                                             FontSize="18"
-                                             ToolTip="Codigo de barras o codigo interno">
-                                        <TextBox.InputBindings>
-                                            <KeyBinding Key="Enter" Command="{Binding AddCodeToCartCommand}" />
-                                        </TextBox.InputBindings>
-                                    </TextBox>
+                                    <StackPanel>
+                                        <TextBlock Text="Codigo de barras o codigo interno" Foreground="{StaticResource MutedTextBrush}" Margin="0,0,0,8" />
+                                        <TextBox Text="{Binding SaleCode, UpdateSourceTrigger=PropertyChanged}"
+                                                 FontSize="18">
+                                            <TextBox.InputBindings>
+                                                <KeyBinding Key="Enter" Command="{Binding AddCodeToCartCommand}" />
+                                            </TextBox.InputBindings>
+                                        </TextBox>
+                                    </StackPanel>
                                     <Button Grid.Column="2"
                                             Content="Agregar"
                                             Style="{StaticResource PrimaryButton}"
+                                            VerticalAlignment="Bottom"
                                             Command="{Binding AddCodeToCartCommand}" />
                                 </Grid>
                             </Border>
 
                             <Border Grid.Row="2" Style="{StaticResource PanelBorder}" Padding="16">
-                                <DataGrid ItemsSource="{Binding Cart}" IsReadOnly="True">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="12" />
+                                        <RowDefinition Height="Auto" />
+                                    </Grid.RowDefinitions>
+                                    <StackPanel>
+                                        <TextBlock Text="Buscar producto por nombre, codigo o parte de la palabra"
+                                                   Foreground="{StaticResource MutedTextBrush}"
+                                                   Margin="0,0,0,8" />
+                                        <TextBox Text="{Binding SaleProductSearchText, UpdateSourceTrigger=PropertyChanged}" />
+                                    </StackPanel>
+                                    <DataGrid Grid.Row="2"
+                                              ItemsSource="{Binding SaleProductResults}"
+                                              IsReadOnly="True"
+                                              MaxHeight="190">
+                                        <DataGrid.Columns>
+                                            <DataGridTextColumn Header="Producto" Binding="{Binding Name}" Width="*" />
+                                            <DataGridTextColumn Header="Stock" Binding="{Binding Stock}" Width="80" />
+                                            <DataGridTextColumn Header="Precio" Binding="{Binding SalePrice, StringFormat=C}" Width="110" />
+                                            <DataGridTemplateColumn Header="" Width="100">
+                                                <DataGridTemplateColumn.CellTemplate>
+                                                    <DataTemplate>
+                                                        <Button Content="Agregar"
+                                                                Style="{StaticResource PrimaryButton}"
+                                                                Command="{Binding DataContext.AddProductToCartCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                                CommandParameter="{Binding}" />
+                                                    </DataTemplate>
+                                                </DataGridTemplateColumn.CellTemplate>
+                                            </DataGridTemplateColumn>
+                                        </DataGrid.Columns>
+                                    </DataGrid>
+                                </Grid>
+                            </Border>
+
+                            <Border Grid.Row="4" Style="{StaticResource PanelBorder}" Padding="16">
+                                <DataGrid ItemsSource="{Binding Cart}">
                                     <DataGrid.Columns>
-                                        <DataGridTextColumn Header="Codigo" Binding="{Binding Code}" Width="150" />
-                                        <DataGridTextColumn Header="Producto" Binding="{Binding Name}" Width="*" />
-                                        <DataGridTextColumn Header="Cant." Binding="{Binding Quantity}" Width="90" />
-                                        <DataGridTextColumn Header="Unitario" Binding="{Binding UnitPrice, StringFormat=C}" Width="120" />
-                                        <DataGridTextColumn Header="Subtotal" Binding="{Binding LineTotal, StringFormat=C}" Width="130" />
+                                        <DataGridTextColumn Header="Codigo" Binding="{Binding Code}" Width="130" IsReadOnly="True" />
+                                        <DataGridTextColumn Header="Producto" Binding="{Binding Name}" Width="*" IsReadOnly="True" />
+                                        <DataGridTemplateColumn Header="Cant." Width="90">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <TextBox Text="{Binding Quantity, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                             HorizontalContentAlignment="Center" />
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
+                                        <DataGridTextColumn Header="Unitario" Binding="{Binding UnitPrice, StringFormat=C}" Width="110" IsReadOnly="True" />
+                                        <DataGridTextColumn Header="Subtotal" Binding="{Binding LineTotal, StringFormat=C}" Width="120" IsReadOnly="True" />
+                                        <DataGridTemplateColumn Header="" Width="95">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <Button Content="Eliminar"
+                                                            Style="{StaticResource RoundedButton}"
+                                                            Command="{Binding DataContext.RemoveCartItemCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                            CommandParameter="{Binding}" />
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
                                     </DataGrid.Columns>
                                 </DataGrid>
                             </Border>
@@ -351,32 +434,47 @@
                                     <RowDefinition Height="Auto" />
                                     <RowDefinition Height="Auto" />
                                     <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
                                     <RowDefinition Height="*" />
                                     <RowDefinition Height="Auto" />
                                 </Grid.RowDefinitions>
 
                                 <TextBlock Text="Carga de producto" FontSize="18" FontWeight="SemiBold" Margin="0,0,0,16" />
-                                <TextBox Grid.Row="1" Margin="0,0,0,10" Text="{Binding ProductBarcode, UpdateSourceTrigger=PropertyChanged}" ToolTip="Codigo de barras" />
-                                <TextBox Grid.Row="2" Margin="0,0,0,10" Text="{Binding ProductInternalCode, UpdateSourceTrigger=PropertyChanged}" ToolTip="Codigo interno" />
-                                <TextBox Grid.Row="3" Margin="0,0,0,10" Text="{Binding ProductName, UpdateSourceTrigger=PropertyChanged}" ToolTip="Nombre" />
-                                <TextBox Grid.Row="4" Margin="0,0,0,10" Text="{Binding ProductSalePrice, UpdateSourceTrigger=PropertyChanged}" ToolTip="Precio de venta" />
-                                <TextBox Grid.Row="5" Margin="0,0,0,10" Text="{Binding ProductStock, UpdateSourceTrigger=PropertyChanged}" ToolTip="Stock actual" />
-                                <ComboBox Grid.Row="6" Margin="0,0,0,10"
+                                <TextBlock Grid.Row="1" Text="Codigo de barras" Foreground="{StaticResource MutedTextBrush}" Margin="0,0,0,6" />
+                                <TextBox Grid.Row="2" Margin="0,0,0,10" Text="{Binding ProductBarcode, UpdateSourceTrigger=PropertyChanged}" />
+                                <TextBlock Grid.Row="3" Text="Codigo interno" Foreground="{StaticResource MutedTextBrush}" Margin="0,0,0,6" />
+                                <TextBox Grid.Row="4" Margin="0,0,0,10" Text="{Binding ProductInternalCode, UpdateSourceTrigger=PropertyChanged}" />
+                                <TextBlock Grid.Row="5" Text="Nombre" Foreground="{StaticResource MutedTextBrush}" Margin="0,0,0,6" />
+                                <TextBox Grid.Row="6" Margin="0,0,0,10" Text="{Binding ProductName, UpdateSourceTrigger=PropertyChanged}" />
+                                <TextBlock Grid.Row="7" Text="Precio de venta" Foreground="{StaticResource MutedTextBrush}" Margin="0,0,0,6" />
+                                <TextBox Grid.Row="8" Margin="0,0,0,10" Text="{Binding ProductSalePrice, UpdateSourceTrigger=PropertyChanged}" />
+                                <TextBlock Grid.Row="9" Text="Stock actual" Foreground="{StaticResource MutedTextBrush}" Margin="0,0,0,6" />
+                                <TextBox Grid.Row="10" Margin="0,0,0,10" Text="{Binding ProductStock, UpdateSourceTrigger=PropertyChanged}" />
+                                <TextBlock Grid.Row="11" Text="Categoria" Foreground="{StaticResource MutedTextBrush}" Margin="0,0,0,6" />
+                                <ComboBox Grid.Row="12" Margin="0,0,0,10"
                                           ItemsSource="{Binding Categories}"
                                           SelectedItem="{Binding SelectedCategory}"
                                           DisplayMemberPath="Name" />
 
-                                <Grid Grid.Row="7" VerticalAlignment="Top">
+                                <Grid Grid.Row="13" VerticalAlignment="Top">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*" />
                                         <ColumnDefinition Width="8" />
                                         <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
-                                    <TextBox Text="{Binding NewCategoryName, UpdateSourceTrigger=PropertyChanged}" ToolTip="Nueva categoria" />
+                                    <StackPanel>
+                                        <TextBlock Text="Nueva categoria" Foreground="{StaticResource MutedTextBrush}" Margin="0,0,0,6" />
+                                        <TextBox Text="{Binding NewCategoryName, UpdateSourceTrigger=PropertyChanged}" />
+                                    </StackPanel>
                                     <Button Grid.Column="2" Content="+ Categoria" Style="{StaticResource RoundedButton}" Command="{Binding CreateCategoryCommand}" />
                                 </Grid>
 
-                                <UniformGrid Grid.Row="8" Columns="3">
+                                <UniformGrid Grid.Row="14" Columns="3">
                                     <Button Content="Nuevo" Margin="0,0,8,0" Style="{StaticResource RoundedButton}" Command="{Binding NewProductCommand}" />
                                     <Button Content="Guardar" Margin="0,0,8,0" Style="{StaticResource PrimaryButton}" Command="{Binding SaveProductCommand}" />
                                     <Button Content="Eliminar" Style="{StaticResource RoundedButton}" Command="{Binding DeleteProductCommand}" />
@@ -420,7 +518,10 @@
                                 <RowDefinition Height="16" />
                                 <RowDefinition Height="*" />
                             </Grid.RowDefinitions>
-                            <TextBox Text="{Binding InventorySearchText, UpdateSourceTrigger=PropertyChanged}" ToolTip="Buscar por nombre o codigo" />
+                            <StackPanel>
+                                <TextBlock Text="Buscar por nombre o codigo" Foreground="{StaticResource MutedTextBrush}" Margin="0,0,0,8" />
+                                <TextBox Text="{Binding InventorySearchText, UpdateSourceTrigger=PropertyChanged}" />
+                            </StackPanel>
                             <DataGrid Grid.Row="2" ItemsSource="{Binding Products}" IsReadOnly="True">
                                 <DataGrid.Columns>
                                     <DataGridTextColumn Header="Codigo" Binding="{Binding InternalCode}" Width="160" />
@@ -457,11 +558,15 @@
                         <Border Style="{StaticResource PanelBorder}" Padding="18" VerticalAlignment="Top">
                             <StackPanel>
                                 <TextBlock Text="Ingreso de stock" FontSize="18" FontWeight="SemiBold" Margin="0,0,0,16" />
+                                <TextBlock Text="Buscar producto" Foreground="{StaticResource MutedTextBrush}" Margin="0,0,0,8" />
+                                <TextBox Margin="0,0,0,12" Text="{Binding PurchaseProductSearchText, UpdateSourceTrigger=PropertyChanged}" />
+                                <TextBlock Text="Producto" Foreground="{StaticResource MutedTextBrush}" Margin="0,0,0,8" />
                                 <ComboBox Margin="0,0,0,12"
-                                          ItemsSource="{Binding Products}"
+                                          ItemsSource="{Binding PurchaseProducts}"
                                           SelectedItem="{Binding PurchaseProduct}"
                                           DisplayMemberPath="Name" />
-                                <TextBox Margin="0,0,0,16" Text="{Binding PurchaseQuantity, UpdateSourceTrigger=PropertyChanged}" ToolTip="Cantidad comprada" />
+                                <TextBlock Text="Cantidad comprada" Foreground="{StaticResource MutedTextBrush}" Margin="0,0,0,8" />
+                                <TextBox Margin="0,0,0,16" Text="{Binding PurchaseQuantity, UpdateSourceTrigger=PropertyChanged}" />
                                 <Button Content="Confirmar ingreso" Style="{StaticResource PrimaryButton}" Command="{Binding ConfirmPurchaseCommand}" />
                             </StackPanel>
                         </Border>
