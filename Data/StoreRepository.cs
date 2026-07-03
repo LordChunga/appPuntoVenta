@@ -52,6 +52,7 @@ public sealed class StoreRepository(Database database)
             FROM Products p
             INNER JOIN Categories c ON c.Id = p.CategoryId
             WHERE @Search = ''
+               OR CAST(p.Id AS TEXT) LIKE @Term
                OR p.Name LIKE @Term
                OR p.Barcode LIKE @Term
                OR p.InternalCode LIKE @Term
@@ -76,7 +77,8 @@ public sealed class StoreRepository(Database database)
                 c.Name AS CategoryName
             FROM Products p
             INNER JOIN Categories c ON c.Id = p.CategoryId
-            WHERE p.Barcode = @Code COLLATE NOCASE
+            WHERE CAST(p.Id AS TEXT) = @Code
+               OR p.Barcode = @Code COLLATE NOCASE
                OR p.InternalCode = @Code COLLATE NOCASE;
             """, new { Code = code.Trim() });
     }

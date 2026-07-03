@@ -67,7 +67,8 @@ public sealed partial class MainViewModel : ObservableObject
     private string inventorySearchText = string.Empty;
 
     [ObservableProperty]
-    private string saleProductSearchText = string.Empty;
+    [NotifyCanExecuteChangedFor(nameof(AddSaleSearchToCartCommand))]
+    private string saleSearchText = string.Empty;
 
     [ObservableProperty]
     private string purchaseProductSearchText = string.Empty;
@@ -79,10 +80,6 @@ public sealed partial class MainViewModel : ObservableObject
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(ConfirmPurchaseCommand))]
     private int purchaseQuantity = 1;
-
-    [ObservableProperty]
-    [NotifyCanExecuteChangedFor(nameof(AddCodeToCartCommand))]
-    private string saleCode = string.Empty;
 
     [ObservableProperty]
     private ObservableCollection<CartItem> cart = [];
@@ -121,7 +118,7 @@ public sealed partial class MainViewModel : ObservableObject
         _ = SearchProductsAsync();
     }
 
-    partial void OnSaleProductSearchTextChanged(string value)
+    partial void OnSaleSearchTextChanged(string value)
     {
         _ = SearchSaleProductsAsync();
     }
@@ -246,13 +243,13 @@ public sealed partial class MainViewModel : ObservableObject
     [RelayCommand]
     private async Task SearchSaleProductsAsync()
     {
-        if (string.IsNullOrWhiteSpace(SaleProductSearchText))
+        if (string.IsNullOrWhiteSpace(SaleSearchText))
         {
             SaleProductResults = new ObservableCollection<Product>();
             return;
         }
 
-        var rows = await repository.SearchProductsAsync(SaleProductSearchText);
+        var rows = await repository.SearchProductsAsync(SaleSearchText);
         SaleProductResults = new ObservableCollection<Product>(rows);
     }
 
@@ -286,23 +283,25 @@ public sealed partial class MainViewModel : ObservableObject
 
     private bool CanConfirmPurchase() => PurchaseProduct is not null && PurchaseQuantity > 0;
 
-    [RelayCommand(CanExecute = nameof(CanAddCodeToCart))]
-    private async Task AddCodeToCartAsync()
+    [RelayCommand(CanExecute = nameof(CanAddSaleSearchToCart))]
+    private async Task AddSaleSearchToCartAsync()
     {
-        var code = SaleCode.Trim();
-        var product = await repository.GetProductByCodeAsync(code);
+        var search = SaleSearchText.Trim();
+        var product = await repository.GetProductByCodeAsync(search);
+        product ??= SaleProductResults.Count == 1 ? SaleProductResults[0] : null;
 
         if (product is null)
         {
-            StatusMessage = "No se encontró un producto con ese código.";
+            StatusMessage = "Busca por id, nombre o codigo y selecciona un producto.";
             return;
         }
 
         AddProductToCart(product);
-        SaleCode = string.Empty;
+        SaleSearchText = string.Empty;
+        SaleProductResults = new ObservableCollection<Product>();
     }
 
-    private bool CanAddCodeToCart() => !string.IsNullOrWhiteSpace(SaleCode);
+    private bool CanAddSaleSearchToCart() => !string.IsNullOrWhiteSpace(SaleSearchText);
 
     [RelayCommand]
     private void AddProductToCart(Product? product)
@@ -345,6 +344,34 @@ public sealed partial class MainViewModel : ObservableObject
         Cart.Remove(item);
         StatusMessage = $"{item.Name} eliminado del carrito.";
         ConfirmSaleCommand.NotifyCanExecuteChanged();
+    }
+
+    [RelayCommand]
+    private void IncrementCartItem(CartItem? item)
+    {
+        if (item is null)
+        {
+            return;
+        }
+
+        item.Quantity++;
+    }
+
+    [RelayCommand]
+    private void DecrementCartItem(CartItem? item)
+    {
+        if (item is null)
+        {
+            return;
+        }
+
+        if (item.Quantity > 1)
+        {
+            item.Quantity--;
+            return;
+        }
+
+        RemoveCartItem(item);
     }
 
     [RelayCommand(CanExecute = nameof(CanConfirmSale))]

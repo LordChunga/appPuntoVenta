@@ -59,6 +59,21 @@
             <Setter Property="FontWeight" Value="SemiBold" />
         </Style>
 
+        <Style x:Key="DangerButton" TargetType="Button" BasedOn="{StaticResource RoundedButton}">
+            <Setter Property="Background" Value="#B3261E" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Padding" Value="10,8" />
+            <Setter Property="MinHeight" Value="36" />
+        </Style>
+
+        <Style x:Key="SmallIconButton" TargetType="Button" BasedOn="{StaticResource RoundedButton}">
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Width" Value="34" />
+            <Setter Property="Height" Value="34" />
+            <Setter Property="MinHeight" Value="34" />
+            <Setter Property="FontWeight" Value="Bold" />
+        </Style>
+
         <Style TargetType="TextBox">
             <Setter Property="Background" Value="{StaticResource InputBackground}" />
             <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
@@ -85,6 +100,50 @@
             <Setter Property="BorderThickness" Value="0" />
             <Setter Property="Padding" Value="12,8" />
             <Setter Property="MinHeight" Value="42" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ComboBox">
+                        <Grid>
+                            <ToggleButton x:Name="ToggleButton"
+                                          Background="{TemplateBinding Background}"
+                                          BorderThickness="0"
+                                          Focusable="False"
+                                          IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}">
+                                <Border Background="{TemplateBinding Background}"
+                                        CornerRadius="8"
+                                        Padding="{TemplateBinding Padding}">
+                                    <Grid>
+                                        <ContentPresenter Content="{TemplateBinding SelectionBoxItem}"
+                                                          ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
+                                                          VerticalAlignment="Center"
+                                                          Margin="0,0,24,0" />
+                                        <TextBlock Text="&#xE70D;"
+                                                   FontFamily="Segoe MDL2 Assets"
+                                                   Foreground="{StaticResource MutedTextBrush}"
+                                                   HorizontalAlignment="Right"
+                                                   VerticalAlignment="Center" />
+                                    </Grid>
+                                </Border>
+                            </ToggleButton>
+                            <Popup IsOpen="{TemplateBinding IsDropDownOpen}"
+                                   Placement="Bottom"
+                                   AllowsTransparency="True"
+                                   Focusable="False"
+                                   PopupAnimation="Slide">
+                                <Border Background="{StaticResource InputBackground}"
+                                        CornerRadius="8"
+                                        BorderBrush="#3A3A44"
+                                        BorderThickness="1"
+                                        MinWidth="{Binding ActualWidth, RelativeSource={RelativeSource TemplatedParent}}">
+                                    <ScrollViewer MaxHeight="260">
+                                        <ItemsPresenter />
+                                    </ScrollViewer>
+                                </Border>
+                            </Popup>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
         </Style>
 
         <Style TargetType="ComboBoxItem">
@@ -264,8 +323,6 @@
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto" />
                                 <RowDefinition Height="16" />
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="16" />
                                 <RowDefinition Height="*" />
                             </Grid.RowDefinitions>
 
@@ -277,11 +334,11 @@
                                         <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
                                     <StackPanel>
-                                        <TextBlock Text="Codigo de barras o codigo interno" Foreground="{StaticResource MutedTextBrush}" Margin="0,0,0,8" />
-                                        <TextBox Text="{Binding SaleCode, UpdateSourceTrigger=PropertyChanged}"
+                                        <TextBlock Text="Buscar por id, nombre, codigo interno o codigo de barras" Foreground="{StaticResource MutedTextBrush}" Margin="0,0,0,8" />
+                                        <TextBox Text="{Binding SaleSearchText, UpdateSourceTrigger=PropertyChanged}"
                                                  FontSize="18">
                                             <TextBox.InputBindings>
-                                                <KeyBinding Key="Enter" Command="{Binding AddCodeToCartCommand}" />
+                                                <KeyBinding Key="Enter" Command="{Binding AddSaleSearchToCartCommand}" />
                                             </TextBox.InputBindings>
                                         </TextBox>
                                     </StackPanel>
@@ -289,7 +346,7 @@
                                             Content="Agregar"
                                             Style="{StaticResource PrimaryButton}"
                                             VerticalAlignment="Bottom"
-                                            Command="{Binding AddCodeToCartCommand}" />
+                                            Command="{Binding AddSaleSearchToCartCommand}" />
                                 </Grid>
                             </Border>
 
@@ -297,23 +354,18 @@
                                 <Grid>
                                     <Grid.RowDefinitions>
                                         <RowDefinition Height="Auto" />
-                                        <RowDefinition Height="12" />
-                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="16" />
+                                        <RowDefinition Height="*" />
                                     </Grid.RowDefinitions>
-                                    <StackPanel>
-                                        <TextBlock Text="Buscar producto por nombre, codigo o parte de la palabra"
-                                                   Foreground="{StaticResource MutedTextBrush}"
-                                                   Margin="0,0,0,8" />
-                                        <TextBox Text="{Binding SaleProductSearchText, UpdateSourceTrigger=PropertyChanged}" />
-                                    </StackPanel>
-                                    <DataGrid Grid.Row="2"
-                                              ItemsSource="{Binding SaleProductResults}"
+                                    <DataGrid ItemsSource="{Binding SaleProductResults}"
                                               IsReadOnly="True"
-                                              MaxHeight="190">
+                                              MaxHeight="170">
                                         <DataGrid.Columns>
+                                            <DataGridTextColumn Header="Id" Binding="{Binding Id}" Width="70" />
                                             <DataGridTextColumn Header="Producto" Binding="{Binding Name}" Width="*" />
-                                            <DataGridTextColumn Header="Stock" Binding="{Binding Stock}" Width="80" />
-                                            <DataGridTextColumn Header="Precio" Binding="{Binding SalePrice, StringFormat=C}" Width="110" />
+                                            <DataGridTextColumn Header="Codigo" Binding="{Binding InternalCode}" Width="110" />
+                                            <DataGridTextColumn Header="Barras" Binding="{Binding Barcode}" Width="130" />
+                                            <DataGridTextColumn Header="Stock" Binding="{Binding Stock}" Width="70" />
                                             <DataGridTemplateColumn Header="" Width="100">
                                                 <DataGridTemplateColumn.CellTemplate>
                                                     <DataTemplate>
@@ -326,36 +378,43 @@
                                             </DataGridTemplateColumn>
                                         </DataGrid.Columns>
                                     </DataGrid>
-                                </Grid>
-                            </Border>
 
-                            <Border Grid.Row="4" Style="{StaticResource PanelBorder}" Padding="16">
-                                <DataGrid ItemsSource="{Binding Cart}">
-                                    <DataGrid.Columns>
-                                        <DataGridTextColumn Header="Codigo" Binding="{Binding Code}" Width="130" IsReadOnly="True" />
-                                        <DataGridTextColumn Header="Producto" Binding="{Binding Name}" Width="*" IsReadOnly="True" />
-                                        <DataGridTemplateColumn Header="Cant." Width="90">
-                                            <DataGridTemplateColumn.CellTemplate>
-                                                <DataTemplate>
-                                                    <TextBox Text="{Binding Quantity, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                                             HorizontalContentAlignment="Center" />
-                                                </DataTemplate>
-                                            </DataGridTemplateColumn.CellTemplate>
-                                        </DataGridTemplateColumn>
-                                        <DataGridTextColumn Header="Unitario" Binding="{Binding UnitPrice, StringFormat=C}" Width="110" IsReadOnly="True" />
-                                        <DataGridTextColumn Header="Subtotal" Binding="{Binding LineTotal, StringFormat=C}" Width="120" IsReadOnly="True" />
-                                        <DataGridTemplateColumn Header="" Width="95">
-                                            <DataGridTemplateColumn.CellTemplate>
-                                                <DataTemplate>
-                                                    <Button Content="Eliminar"
-                                                            Style="{StaticResource RoundedButton}"
-                                                            Command="{Binding DataContext.RemoveCartItemCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                                            CommandParameter="{Binding}" />
-                                                </DataTemplate>
-                                            </DataGridTemplateColumn.CellTemplate>
-                                        </DataGridTemplateColumn>
-                                    </DataGrid.Columns>
-                                </DataGrid>
+                                    <DataGrid Grid.Row="2" ItemsSource="{Binding Cart}">
+                                        <DataGrid.Columns>
+                                            <DataGridTextColumn Header="Codigo" Binding="{Binding Code}" Width="130" IsReadOnly="True" />
+                                            <DataGridTextColumn Header="Producto" Binding="{Binding Name}" Width="*" IsReadOnly="True" />
+                                            <DataGridTemplateColumn Header="Cant." Width="130">
+                                                <DataGridTemplateColumn.CellTemplate>
+                                                    <DataTemplate>
+                                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                                            <Button Content="-" Style="{StaticResource SmallIconButton}"
+                                                                    Command="{Binding DataContext.DecrementCartItemCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                                    CommandParameter="{Binding}" />
+                                                            <TextBlock Text="{Binding Quantity}" Width="34" HorizontalAlignment="Center" TextAlignment="Center" />
+                                                            <Button Content="+" Style="{StaticResource SmallIconButton}"
+                                                                    Command="{Binding DataContext.IncrementCartItemCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                                    CommandParameter="{Binding}" />
+                                                        </StackPanel>
+                                                    </DataTemplate>
+                                                </DataGridTemplateColumn.CellTemplate>
+                                            </DataGridTemplateColumn>
+                                            <DataGridTextColumn Header="Unitario" Binding="{Binding UnitPrice, StringFormat=C}" Width="110" IsReadOnly="True" />
+                                            <DataGridTextColumn Header="Subtotal" Binding="{Binding LineTotal, StringFormat=C}" Width="120" IsReadOnly="True" />
+                                            <DataGridTemplateColumn Header="" Width="58">
+                                                <DataGridTemplateColumn.CellTemplate>
+                                                    <DataTemplate>
+                                                        <Button Style="{StaticResource DangerButton}"
+                                                                Command="{Binding DataContext.RemoveCartItemCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                                CommandParameter="{Binding}"
+                                                                ToolTip="Eliminar">
+                                                            <TextBlock Text="&#xE74D;" FontFamily="Segoe MDL2 Assets" />
+                                                        </Button>
+                                                    </DataTemplate>
+                                                </DataGridTemplateColumn.CellTemplate>
+                                            </DataGridTemplateColumn>
+                                        </DataGrid.Columns>
+                                    </DataGrid>
+                                </Grid>
                             </Border>
                         </Grid>
 
@@ -459,7 +518,13 @@
                                 <ComboBox Grid.Row="12" Margin="0,0,0,10"
                                           ItemsSource="{Binding Categories}"
                                           SelectedItem="{Binding SelectedCategory}"
-                                          DisplayMemberPath="Name" />
+                                          TextSearch.TextPath="Name">
+                                    <ComboBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding Name}" Foreground="{StaticResource TextBrush}" />
+                                        </DataTemplate>
+                                    </ComboBox.ItemTemplate>
+                                </ComboBox>
 
                                 <Grid Grid.Row="13" VerticalAlignment="Top">
                                     <Grid.ColumnDefinitions>
@@ -518,10 +583,22 @@
                                 <RowDefinition Height="16" />
                                 <RowDefinition Height="*" />
                             </Grid.RowDefinitions>
-                            <StackPanel>
-                                <TextBlock Text="Buscar por nombre o codigo" Foreground="{StaticResource MutedTextBrush}" Margin="0,0,0,8" />
-                                <TextBox Text="{Binding InventorySearchText, UpdateSourceTrigger=PropertyChanged}" />
-                            </StackPanel>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="12" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock Text="Buscar por id, nombre o codigo" Foreground="{StaticResource MutedTextBrush}" Margin="0,0,0,8" />
+                                    <TextBox Text="{Binding InventorySearchText, UpdateSourceTrigger=PropertyChanged}" />
+                                </StackPanel>
+                                <Button Grid.Column="2"
+                                        Content="Buscar"
+                                        Style="{StaticResource PrimaryButton}"
+                                        VerticalAlignment="Bottom"
+                                        Command="{Binding SearchProductsCommand}" />
+                            </Grid>
                             <DataGrid Grid.Row="2" ItemsSource="{Binding Products}" IsReadOnly="True">
                                 <DataGrid.Columns>
                                     <DataGridTextColumn Header="Codigo" Binding="{Binding InternalCode}" Width="160" />
@@ -564,7 +641,13 @@
                                 <ComboBox Margin="0,0,0,12"
                                           ItemsSource="{Binding PurchaseProducts}"
                                           SelectedItem="{Binding PurchaseProduct}"
-                                          DisplayMemberPath="Name" />
+                                          TextSearch.TextPath="Name">
+                                    <ComboBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding Name}" Foreground="{StaticResource TextBrush}" />
+                                        </DataTemplate>
+                                    </ComboBox.ItemTemplate>
+                                </ComboBox>
                                 <TextBlock Text="Cantidad comprada" Foreground="{StaticResource MutedTextBrush}" Margin="0,0,0,8" />
                                 <TextBox Margin="0,0,0,16" Text="{Binding PurchaseQuantity, UpdateSourceTrigger=PropertyChanged}" />
                                 <Button Content="Confirmar ingreso" Style="{StaticResource PrimaryButton}" Command="{Binding ConfirmPurchaseCommand}" />
