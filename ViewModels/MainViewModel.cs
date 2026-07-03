@@ -11,6 +11,9 @@ public sealed partial class MainViewModel : ObservableObject
     private readonly StoreRepository repository;
 
     [ObservableProperty]
+    private int activeTabIndex;
+
+    [ObservableProperty]
     private ObservableCollection<Category> categories = [];
 
     [ObservableProperty]
@@ -68,29 +71,13 @@ public sealed partial class MainViewModel : ObservableObject
     private string saleCode = string.Empty;
 
     [ObservableProperty]
-    [NotifyCanExecuteChangedFor(nameof(AddCodeToCartCommand))]
-    private string busquedaProducto = string.Empty;
-
-    [ObservableProperty]
-    private ObservableCollection<string> clientes = ["Consumidor Final", "Cliente registrado"];
-
-    [ObservableProperty]
-    private string clienteSeleccionado = "Consumidor Final";
-
-    [ObservableProperty]
-    private decimal descuentos;
-
-    [ObservableProperty]
-    private decimal recargos;
-
-    [ObservableProperty]
     private ObservableCollection<CartItem> cart = [];
 
     [ObservableProperty]
     private string statusMessage = "Listo.";
 
     public decimal Subtotal => Cart.Sum(item => item.LineTotal);
-    public decimal Total => Subtotal - Descuentos + Recargos;
+    public decimal Total => Subtotal;
     public int ItemsCount => Cart.Sum(item => item.Quantity);
 
     public MainViewModel(StoreRepository repository)
@@ -118,16 +105,6 @@ public sealed partial class MainViewModel : ObservableObject
     partial void OnInventorySearchTextChanged(string value)
     {
         _ = SearchProductsAsync();
-    }
-
-    partial void OnDescuentosChanged(decimal value)
-    {
-        OnPropertyChanged(nameof(Total));
-    }
-
-    partial void OnRecargosChanged(decimal value)
-    {
-        OnPropertyChanged(nameof(Total));
     }
 
     [RelayCommand]
@@ -257,9 +234,7 @@ public sealed partial class MainViewModel : ObservableObject
     [RelayCommand(CanExecute = nameof(CanAddCodeToCart))]
     private async Task AddCodeToCartAsync()
     {
-        var code = string.IsNullOrWhiteSpace(BusquedaProducto)
-            ? SaleCode.Trim()
-            : BusquedaProducto.Trim();
+        var code = SaleCode.Trim();
         var product = await repository.GetProductByCodeAsync(code);
 
         if (product is null)
@@ -287,17 +262,11 @@ public sealed partial class MainViewModel : ObservableObject
         }
 
         SaleCode = string.Empty;
-        BusquedaProducto = string.Empty;
         StatusMessage = $"{product.Name} agregado al carrito.";
         ConfirmSaleCommand.NotifyCanExecuteChanged();
-        ProcesarVentaCommand.NotifyCanExecuteChanged();
     }
 
-    private bool CanAddCodeToCart()
-    {
-        return !string.IsNullOrWhiteSpace(SaleCode)
-            || !string.IsNullOrWhiteSpace(BusquedaProducto);
-    }
+    private bool CanAddCodeToCart() => !string.IsNullOrWhiteSpace(SaleCode);
 
     [RelayCommand(CanExecute = nameof(CanConfirmSale))]
     private async Task ConfirmSaleAsync()
@@ -309,7 +278,6 @@ public sealed partial class MainViewModel : ObservableObject
             await SearchProductsAsync();
             StatusMessage = "Venta confirmada.";
             ConfirmSaleCommand.NotifyCanExecuteChanged();
-            ProcesarVentaCommand.NotifyCanExecuteChanged();
         }
         catch (Exception ex)
         {
@@ -325,44 +293,6 @@ public sealed partial class MainViewModel : ObservableObject
         Cart.Clear();
         StatusMessage = "Carrito vaciado.";
         ConfirmSaleCommand.NotifyCanExecuteChanged();
-        ProcesarVentaCommand.NotifyCanExecuteChanged();
-    }
-
-    [RelayCommand(CanExecute = nameof(CanConfirmSale))]
-    private async Task ProcesarVentaAsync()
-    {
-        await ConfirmSaleAsync();
-    }
-
-    [RelayCommand]
-    private void GestionarExtras()
-    {
-        StatusMessage = "Gestión de extras pendiente para el próximo paso del MVP.";
-    }
-
-    [RelayCommand]
-    private void NuevoProducto()
-    {
-        ClearProductForm();
-        StatusMessage = "Formulario listo para cargar un nuevo producto.";
-    }
-
-    [RelayCommand]
-    private void MasOpciones()
-    {
-        StatusMessage = "Menú de más opciones pendiente.";
-    }
-
-    [RelayCommand]
-    private void ConsultarPrecio()
-    {
-        StatusMessage = "Ingresá o escaneá un código para consultar el precio.";
-    }
-
-    [RelayCommand]
-    private void IngresarPeso()
-    {
-        StatusMessage = "Ingreso por peso pendiente.";
     }
 
     private async Task RefreshCategoriesAsync()
