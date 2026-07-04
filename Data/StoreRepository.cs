@@ -120,21 +120,32 @@ public sealed class StoreRepository(Database database)
 
         foreach (var product in products)
         {
-            var internalCode = product.Id.ToString();
-            var exists = await connection.ExecuteScalarAsync<int>("""
-                SELECT COUNT(1)
-                FROM Products
-                WHERE Id = @Id
-                   OR Barcode = @Barcode COLLATE NOCASE
-                   OR InternalCode = @InternalCode COLLATE NOCASE
-                   OR Name = @Name COLLATE NOCASE;
-                """, new
-                {
-                    product.Id,
-                    product.Barcode,
-                    InternalCode = internalCode,
-                    product.Name
-                }, transaction);
+            // Check if a product with the same non-empty barcode or same name already exists
+            int exists;
+            if (!string.IsNullOrWhiteSpace(product.Barcode))
+            {
+                exists = await connection.ExecuteScalarAsync<int>("""
+                    SELECT COUNT(1)
+                    FROM Products
+                    WHERE Barcode = @Barcode COLLATE NOCASE
+                       OR Name = @Name COLLATE NOCASE;
+                    """, new
+                    {
+                        product.Barcode,
+                        product.Name
+                    }, transaction);
+            }
+            else
+            {
+                exists = await connection.ExecuteScalarAsync<int>("""
+                    SELECT COUNT(1)
+                    FROM Products
+                    WHERE Name = @Name COLLATE NOCASE;
+                    """, new
+                    {
+                        product.Name
+                    }, transaction);
+            }
 
             if (exists > 0)
             {
@@ -160,13 +171,12 @@ public sealed class StoreRepository(Database database)
             }
 
             await connection.ExecuteAsync("""
-                INSERT INTO Products (Id, Barcode, InternalCode, Name, SalePrice, Stock, CategoryId)
-                VALUES (@Id, @Barcode, @InternalCode, @Name, @SalePrice, 0, @CategoryId);
+                INSERT INTO Products (Barcode, InternalCode, Name, SalePrice, Stock, CategoryId)
+                VALUES (@Barcode, @InternalCode, @Name, @SalePrice, 0, @CategoryId);
                 """, new
                 {
-                    product.Id,
-                    product.Barcode,
-                    InternalCode = internalCode,
+                    Barcode = product.Barcode ?? string.Empty,
+                    InternalCode = product.Id.ToString(),
                     product.Name,
                     product.SalePrice,
                     CategoryId = categoryId.Value

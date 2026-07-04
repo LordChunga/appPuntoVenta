@@ -37,8 +37,8 @@ public sealed class Database
 
             CREATE TABLE IF NOT EXISTS Products (
                 Id INTEGER PRIMARY KEY AUTOINCREMENT,
-                Barcode TEXT NOT NULL UNIQUE COLLATE NOCASE,
-                InternalCode TEXT NOT NULL UNIQUE COLLATE NOCASE,
+                Barcode TEXT NOT NULL DEFAULT '' COLLATE NOCASE,
+                InternalCode TEXT NOT NULL DEFAULT '' COLLATE NOCASE,
                 Name TEXT NOT NULL,
                 SalePrice NUMERIC NOT NULL CHECK (SalePrice >= 0),
                 Stock INTEGER NOT NULL CHECK (Stock >= 0),
@@ -49,6 +49,40 @@ public sealed class Database
             INSERT OR IGNORE INTO Categories (Name) VALUES
                 ('alfajores'),
                 ('botellas');
+            """);
+
+        await MigrateRemoveUniqueConstraintsAsync(connection);
+    }
+
+    private static async Task MigrateRemoveUniqueConstraintsAsync(IDbConnection connection)
+    {
+        var tableInfo = await connection.QueryAsync<dynamic>(
+            "SELECT sql FROM sqlite_master WHERE type='table' AND name='Products';");
+
+        var sql = tableInfo.FirstOrDefault()?.sql as string;
+        if (sql is null || !sql.Contains("UNIQUE", StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        await connection.ExecuteAsync("""
+            CREATE TABLE IF NOT EXISTS Products_new (
+                Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                Barcode TEXT NOT NULL DEFAULT '' COLLATE NOCASE,
+                InternalCode TEXT NOT NULL DEFAULT '' COLLATE NOCASE,
+                Name TEXT NOT NULL,
+                SalePrice NUMERIC NOT NULL CHECK (SalePrice >= 0),
+                Stock INTEGER NOT NULL CHECK (Stock >= 0),
+                CategoryId INTEGER NOT NULL,
+                FOREIGN KEY (CategoryId) REFERENCES Categories(Id)
+            );
+
+            INSERT INTO Products_new (Id, Barcode, InternalCode, Name, SalePrice, Stock, CategoryId)
+            SELECT Id, Barcode, InternalCode, Name, SalePrice, Stock, CategoryId FROM Products;
+
+            DROP TABLE Products;
+
+            ALTER TABLE Products_new RENAME TO Products;
             """);
     }
 }
