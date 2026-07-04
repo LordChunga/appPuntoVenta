@@ -441,12 +441,12 @@
                                         <TextBlock Text="{Binding Subtotal, StringFormat=C}" HorizontalAlignment="Right" />
                                     </Grid>
 
-                                    <TextBlock Text="{Binding Total, StringFormat=Total {0:C}}"
-                                               Foreground="{StaticResource TotalBrush}"
-                                               FontSize="38"
-                                               FontWeight="Bold"
-                                               HorizontalAlignment="Right"
-                                               Margin="0,0,0,18" />
+                                    <Viewbox MaxHeight="52" HorizontalAlignment="Right" Stretch="Uniform" Margin="0,0,0,18">
+                                        <TextBlock Text="{Binding Total, StringFormat=Total {0:C}}"
+                                                   Foreground="{StaticResource TotalBrush}"
+                                                   FontSize="38"
+                                                   FontWeight="Bold" />
+                                    </Viewbox>
                                     <Button Content="Confirmar Venta"
                                             Style="{StaticResource PrimaryButton}"
                                             FontSize="16"
@@ -495,6 +495,7 @@
                         </Grid.ColumnDefinitions>
 
                         <Border Style="{StaticResource PanelBorder}" Padding="18">
+                            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                             <Grid>
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto" />
@@ -510,7 +511,7 @@
                                     <RowDefinition Height="Auto" />
                                     <RowDefinition Height="Auto" />
                                     <RowDefinition Height="Auto" />
-                                    <RowDefinition Height="*" />
+                                    <RowDefinition Height="Auto" />
                                     <RowDefinition Height="Auto" />
                                 </Grid.RowDefinitions>
 
@@ -556,10 +557,13 @@
                                     <Button Content="Eliminar" Style="{StaticResource RoundedButton}" Command="{Binding DeleteProductCommand}" />
                                 </UniformGrid>
                             </Grid>
+                            </ScrollViewer>
                         </Border>
 
                         <Border Grid.Column="2" Style="{StaticResource PanelBorder}" Padding="16">
-                            <DataGrid ItemsSource="{Binding Products}" SelectedItem="{Binding SelectedProduct}" IsReadOnly="True">
+                            <DataGrid ItemsSource="{Binding Products}" SelectedItem="{Binding SelectedProduct}" IsReadOnly="True"
+                                      ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                      ScrollViewer.CanContentScroll="True">
                                 <DataGrid.Columns>
                                     <DataGridTextColumn Header="Codigo" Binding="{Binding InternalCode}" Width="130" />
                                     <DataGridTextColumn Header="Barras" Binding="{Binding Barcode}" Width="150" />
