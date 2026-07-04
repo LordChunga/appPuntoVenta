@@ -29,7 +29,7 @@ public static class XlsxProductImporter
         }
 
         var headers = ReadRow(rows[0], sharedStrings)
-            .ToDictionary(cell => NormalizeHeader(cell.Key), cell => NormalizeHeader(cell.Value));
+            .ToDictionary(cell => cell.Key, cell => NormalizeHeader(cell.Value));
 
         var idColumn = FindColumn(headers, "id");
         var barcodeColumn = FindColumn(headers, "codigobarra", "codigodebarra", "codigobarras", "barcode", "barras");
@@ -53,7 +53,6 @@ public static class XlsxProductImporter
             var category = GetValue(cells, categoryColumn);
 
             if (!TryParseId(idText, out var id)
-                || string.IsNullOrWhiteSpace(barcode)
                 || string.IsNullOrWhiteSpace(name)
                 || !TryParsePrice(priceText, out var price)
                 || string.IsNullOrWhiteSpace(category))
