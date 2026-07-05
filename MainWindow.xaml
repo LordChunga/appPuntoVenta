@@ -448,14 +448,13 @@
                                                    FontSize="38"
                                                    FontWeight="Bold" />
                                     </Viewbox>
-                                    <!-- Bug 2: Boton Confirmar Venta vinculado a ConfirmSaleCommand -->
+                                    <!-- Confirmar Venta: habilitado automaticamente por CanConfirmSale() via CanExecuteChanged -->
                                     <Button Content="Confirmar Venta"
                                             Style="{StaticResource PrimaryButton}"
                                             FontSize="16"
                                             MinHeight="64"
                                             Margin="0,0,0,12"
-                                            Command="{Binding ConfirmSaleCommand}"
-                                            IsEnabled="{Binding ConfirmSaleCommand.CanExecute, FallbackValue=False}" />
+                                            Command="{Binding ConfirmSaleCommand}" />
                                     <Button Content="Vaciar Carrito"
                                             Style="{StaticResource RoundedButton}"
                                             Background="#33333C"
