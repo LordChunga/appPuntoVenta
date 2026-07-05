@@ -442,6 +442,140 @@
                                         <TextBlock Text="{Binding Subtotal, StringFormat=C}" HorizontalAlignment="Right" />
                                     </Grid>
 
+                                    <!-- Método de Pago -->
+                                    <TextBlock Text="Método de Pago"
+                                               Foreground="{StaticResource MutedTextBrush}"
+                                               Margin="0,0,0,8" />
+                                    <UniformGrid Columns="3" Margin="0,0,0,18">
+                                        <UniformGrid.Resources>
+                                            <Style x:Key="MetodoPagoBtn" TargetType="Button">
+                                                <Setter Property="BorderThickness" Value="1"/>
+                                                <Setter Property="BorderBrush" Value="#3A3A44"/>
+                                                <Setter Property="Background" Value="#24242C"/>
+                                                <Setter Property="Foreground" Value="{StaticResource MutedTextBrush}"/>
+                                                <Setter Property="Padding" Value="4,10"/>
+                                                <Setter Property="Cursor" Value="Hand"/>
+                                                <Setter Property="FontSize" Value="12"/>
+                                                <Setter Property="Template">
+                                                    <Setter.Value>
+                                                        <ControlTemplate TargetType="Button">
+                                                            <Border Background="{TemplateBinding Background}"
+                                                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                                                    BorderThickness="{TemplateBinding BorderThickness}"
+                                                                    CornerRadius="8"
+                                                                    Padding="{TemplateBinding Padding}">
+                                                                <ContentPresenter HorizontalAlignment="Center"
+                                                                                  VerticalAlignment="Center"/>
+                                                            </Border>
+                                                        </ControlTemplate>
+                                                    </Setter.Value>
+                                                </Setter>
+                                            </Style>
+                                        </UniformGrid.Resources>
+
+                                        <!-- Efectivo -->
+                                        <Button Content="💵 Efectivo"
+                                                Margin="0,0,6,6"
+                                                Command="{Binding SetMetodoPagoCommand}"
+                                                CommandParameter="Efectivo">
+                                            <Button.Style>
+                                                <Style TargetType="Button" BasedOn="{StaticResource MetodoPagoBtn}">
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding MetodoPago}" Value="Efectivo">
+                                                            <Setter Property="Background" Value="{StaticResource AccentSoftBrush}"/>
+                                                            <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}"/>
+                                                            <Setter Property="Foreground" Value="White"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Button.Style>
+                                        </Button>
+
+                                        <!-- Débito -->
+                                        <Button Content="💳 Débito"
+                                                Margin="0,0,6,6"
+                                                Command="{Binding SetMetodoPagoCommand}"
+                                                CommandParameter="Débito">
+                                            <Button.Style>
+                                                <Style TargetType="Button" BasedOn="{StaticResource MetodoPagoBtn}">
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding MetodoPago}" Value="Débito">
+                                                            <Setter Property="Background" Value="{StaticResource AccentSoftBrush}"/>
+                                                            <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}"/>
+                                                            <Setter Property="Foreground" Value="White"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Button.Style>
+                                        </Button>
+
+                                        <!-- Crédito -->
+                                        <Button Content="💳 Crédito"
+                                                Margin="0,0,0,6"
+                                                Command="{Binding SetMetodoPagoCommand}"
+                                                CommandParameter="Crédito">
+                                            <Button.Style>
+                                                <Style TargetType="Button" BasedOn="{StaticResource MetodoPagoBtn}">
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding MetodoPago}" Value="Crédito">
+                                                            <Setter Property="Background" Value="{StaticResource AccentSoftBrush}"/>
+                                                            <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}"/>
+                                                            <Setter Property="Foreground" Value="White"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Button.Style>
+                                        </Button>
+
+                                        <!-- Transferencia -->
+                                        <Button Content="🏦 Transfer."
+                                                Margin="0,0,6,0"
+                                                Command="{Binding SetMetodoPagoCommand}"
+                                                CommandParameter="Transferencia">
+                                            <Button.Style>
+                                                <Style TargetType="Button" BasedOn="{StaticResource MetodoPagoBtn}">
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding MetodoPago}" Value="Transferencia">
+                                                            <Setter Property="Background" Value="{StaticResource AccentSoftBrush}"/>
+                                                            <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}"/>
+                                                            <Setter Property="Foreground" Value="White"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Button.Style>
+                                        </Button>
+
+                                        <!-- QR -->
+                                        <Button Content="📱 QR"
+                                                Margin="0,0,6,0"
+                                                Command="{Binding SetMetodoPagoCommand}"
+                                                CommandParameter="QR / Billetera digital">
+                                            <Button.Style>
+                                                <Style TargetType="Button" BasedOn="{StaticResource MetodoPagoBtn}">
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding MetodoPago}" Value="QR / Billetera digital">
+                                                            <Setter Property="Background" Value="{StaticResource AccentSoftBrush}"/>
+                                                            <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}"/>
+                                                            <Setter Property="Foreground" Value="White"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Button.Style>
+                                        </Button>
+
+                                        <!-- Seleccionado actual (label) -->
+                                        <Border CornerRadius="8" Background="#1A1A22" Margin="0">
+                                            <TextBlock Text="{Binding MetodoPago}"
+                                                       FontSize="11" FontWeight="SemiBold"
+                                                       Foreground="{StaticResource AccentBrush}"
+                                                       HorizontalAlignment="Center"
+                                                       VerticalAlignment="Center"
+                                                       TextWrapping="Wrap"
+                                                       TextAlignment="Center"
+                                                       Padding="4"/>
+                                        </Border>
+                                    </UniformGrid>
+
                                     <!-- Bug 1: Viewbox con ancho completo para escalar el Total sin cortes -->
                                     <Viewbox Height="52" HorizontalAlignment="Stretch" Stretch="Uniform" Margin="0,0,0,18">
                                         <TextBlock Text="{Binding Total, StringFormat=Total {0:C}}"

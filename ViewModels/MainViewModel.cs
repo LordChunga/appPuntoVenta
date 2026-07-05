@@ -88,6 +88,13 @@ public sealed partial class MainViewModel : ObservableObject
     [ObservableProperty]
     private string statusMessage = "Listo.";
 
+    /// <summary>Opciones de método de pago disponibles en el POS.</summary>
+    public IReadOnlyList<string> MetodosPago { get; } =
+        ["Efectivo", "Débito", "Crédito", "Transferencia", "QR / Billetera digital"];
+
+    [ObservableProperty]
+    private string metodoPago = "Efectivo";
+
     public decimal Subtotal => Cart.Sum(item => item.LineTotal);
     public decimal Total => Subtotal;
     public int ItemsCount => Cart.Sum(item => item.Quantity);
@@ -448,8 +455,9 @@ public sealed partial class MainViewModel : ObservableObject
     {
         try
         {
-            await repository.ConfirmSaleAsync(Cart);
+            await repository.ConfirmSaleAsync(Cart, metodoPago: MetodoPago);
             Cart.Clear();
+            MetodoPago = "Efectivo";   // resetear al método por defecto
             await SearchProductsAsync();
             await SearchPurchaseProductsAsync();
             // Refrescar métricas en background para mantener KPIs actualizados
@@ -464,6 +472,14 @@ public sealed partial class MainViewModel : ObservableObject
     }
 
     private bool CanConfirmSale() => Cart.Count > 0;
+
+    /// <summary>Cambia el método de pago activo desde los botones del panel POS.</summary>
+    [RelayCommand]
+    private void SetMetodoPago(string metodo)
+    {
+        if (!string.IsNullOrWhiteSpace(metodo))
+            MetodoPago = metodo;
+    }
 
     [RelayCommand]
     private void ClearCart()
