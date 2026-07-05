@@ -345,20 +345,34 @@ public sealed partial class MainViewModel : ObservableObject
             return;
         }
 
+        // Bug 3: Validación de stock
         var cartItem = Cart.FirstOrDefault(item => item.ProductId == product.Id);
         if (cartItem is null)
         {
+            if (product.Stock <= 0)
+            {
+                StatusMessage = $"Sin stock disponible para '{product.Name}'.";
+                return;
+            }
+
             Cart.Add(new CartItem
             {
                 ProductId = product.Id,
                 Code = string.IsNullOrWhiteSpace(product.Barcode) ? product.InternalCode : product.Barcode,
                 Name = product.Name,
                 UnitPrice = product.SalePrice,
-                Quantity = 1
+                Quantity = 1,
+                StockAvailable = product.Stock
             });
         }
         else
         {
+            if (cartItem.Quantity >= cartItem.StockAvailable)
+            {
+                StatusMessage = $"Stock insuficiente: máximo {cartItem.StockAvailable} unidad(es) de '{product.Name}'.";
+                return;
+            }
+
             cartItem.Quantity++;
             RefreshTotals();
         }
@@ -388,7 +402,15 @@ public sealed partial class MainViewModel : ObservableObject
             return;
         }
 
+        // Bug 3: Validación de stock al incrementar desde el carrito
+        if (item.Quantity >= item.StockAvailable)
+        {
+            StatusMessage = $"Stock insuficiente: máximo {item.StockAvailable} unidad(es) de '{item.Name}'.";
+            return;
+        }
+
         item.Quantity++;
+        RefreshTotals();
     }
 
     [RelayCommand]

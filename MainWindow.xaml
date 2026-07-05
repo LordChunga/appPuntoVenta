@@ -441,18 +441,21 @@
                                         <TextBlock Text="{Binding Subtotal, StringFormat=C}" HorizontalAlignment="Right" />
                                     </Grid>
 
-                                    <Viewbox MaxHeight="52" HorizontalAlignment="Right" Stretch="Uniform" Margin="0,0,0,18">
+                                    <!-- Bug 1: Viewbox con ancho completo para escalar el Total sin cortes -->
+                                    <Viewbox Height="52" HorizontalAlignment="Stretch" Stretch="Uniform" Margin="0,0,0,18">
                                         <TextBlock Text="{Binding Total, StringFormat=Total {0:C}}"
                                                    Foreground="{StaticResource TotalBrush}"
                                                    FontSize="38"
                                                    FontWeight="Bold" />
                                     </Viewbox>
+                                    <!-- Bug 2: Boton Confirmar Venta vinculado a ConfirmSaleCommand -->
                                     <Button Content="Confirmar Venta"
                                             Style="{StaticResource PrimaryButton}"
                                             FontSize="16"
                                             MinHeight="64"
                                             Margin="0,0,0,12"
-                                            Command="{Binding ConfirmSaleCommand}" />
+                                            Command="{Binding ConfirmSaleCommand}"
+                                            IsEnabled="{Binding ConfirmSaleCommand.CanExecute, FallbackValue=False}" />
                                     <Button Content="Vaciar Carrito"
                                             Style="{StaticResource RoundedButton}"
                                             Background="#33333C"
@@ -614,7 +617,10 @@
                                         VerticalAlignment="Bottom"
                                         Command="{Binding SearchProductsCommand}" />
                             </Grid>
-                            <DataGrid Grid.Row="2" ItemsSource="{Binding Products}" IsReadOnly="True">
+                            <!-- Bug 4: ScrollViewer.VerticalScrollBarVisibility=Auto en Inventario -->
+                            <DataGrid Grid.Row="2" ItemsSource="{Binding Products}" IsReadOnly="True"
+                                      ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                      ScrollViewer.CanContentScroll="True">
                                 <DataGrid.Columns>
                                     <DataGridTextColumn Header="Codigo" Binding="{Binding InternalCode}" Width="160" />
                                     <DataGridTextColumn Header="Nombre" Binding="{Binding Name}" Width="*" />
@@ -670,7 +676,10 @@
                         </Border>
 
                         <Border Grid.Column="2" Style="{StaticResource PanelBorder}" Padding="16">
-                            <DataGrid ItemsSource="{Binding Products}" IsReadOnly="True">
+                            <!-- Bug 4: ScrollViewer.VerticalScrollBarVisibility=Auto en Compras -->
+                            <DataGrid ItemsSource="{Binding Products}" IsReadOnly="True"
+                                      ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                      ScrollViewer.CanContentScroll="True">
                                 <DataGrid.Columns>
                                     <DataGridTextColumn Header="Codigo" Binding="{Binding InternalCode}" Width="150" />
                                     <DataGridTextColumn Header="Nombre" Binding="{Binding Name}" Width="*" />
