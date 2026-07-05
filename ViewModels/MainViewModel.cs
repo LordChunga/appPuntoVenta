@@ -92,9 +92,13 @@ public sealed partial class MainViewModel : ObservableObject
     public decimal Total => Subtotal;
     public int ItemsCount => Cart.Sum(item => item.Quantity);
 
+    /// <summary>ViewModel de la pestaña Métricas, accesible desde la vista principal.</summary>
+    public MetricasViewModel Metricas { get; }
+
     public MainViewModel(StoreRepository repository)
     {
         this.repository = repository;
+        Metricas = new MetricasViewModel(repository);
         Cart.CollectionChanged += OnCartCollectionChanged;
     }
 
@@ -127,6 +131,15 @@ public sealed partial class MainViewModel : ObservableObject
     partial void OnPurchaseProductSearchTextChanged(string value)
     {
         _ = SearchPurchaseProductsAsync();
+    }
+
+    // Índice 4 = pestaña Métricas → cargar datos automáticamente al navegar
+    partial void OnActiveTabIndexChanged(int value)
+    {
+        if (value == 4)
+        {
+            _ = Metricas.LoadAsync();
+        }
     }
 
     [RelayCommand]
@@ -439,6 +452,8 @@ public sealed partial class MainViewModel : ObservableObject
             Cart.Clear();
             await SearchProductsAsync();
             await SearchPurchaseProductsAsync();
+            // Refrescar métricas en background para mantener KPIs actualizados
+            _ = Metricas.LoadAsync();
             StatusMessage = "Venta confirmada.";
             ConfirmSaleCommand.NotifyCanExecuteChanged();
         }

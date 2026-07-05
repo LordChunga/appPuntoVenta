@@ -269,6 +269,7 @@
                         <ListBoxItem Content="Productos" />
                         <ListBoxItem Content="Inventario" />
                         <ListBoxItem Content="Compras" />
+                        <ListBoxItem Content="Métricas" />
                     </ListBox>
                 </StackPanel>
 
@@ -689,6 +690,380 @@
                             </DataGrid>
                         </Border>
                     </Grid>
+                </Grid>
+            </TabItem>
+
+            <!-- ═══════════════════ MÉTRICAS ═══════════════════ -->
+            <TabItem Header="Métricas">
+                <Grid DataContext="{Binding Metricas}">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="16" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="16" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="16" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <!-- ── Encabezado ── -->
+                    <StackPanel>
+                        <TextBlock Text="Métricas" FontSize="32" FontWeight="Bold" />
+                        <TextBlock Text="Resumen de ventas, ingresos y tendencias del negocio."
+                                   Foreground="{StaticResource MutedTextBrush}" Margin="0,6,0,0" />
+                    </StackPanel>
+
+                    <!-- ── KPI Cards ── -->
+                    <UniformGrid Grid.Row="2" Columns="4" HorizontalAlignment="Stretch">
+
+                        <!-- KPI 1: Total de Ventas -->
+                        <Border Margin="0,0,14,0" CornerRadius="12" Background="#1E1E24" Padding="20,18">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="8"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="6"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+                                <StackPanel Orientation="Horizontal">
+                                    <Border Width="36" Height="36" CornerRadius="8" Background="#2A2A40">
+                                        <TextBlock Text="&#xE8C3;" FontFamily="Segoe MDL2 Assets"
+                                                   FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                   Foreground="#818CF8"/>
+                                    </Border>
+                                </StackPanel>
+                                <TextBlock Grid.Row="2" Text="{Binding TotalVentas}"
+                                           FontSize="36" FontWeight="Bold" Foreground="White"/>
+                                <TextBlock Grid.Row="4" Text="Total de Ventas"
+                                           FontSize="13" Foreground="{StaticResource MutedTextBrush}"/>
+                            </Grid>
+                        </Border>
+
+                        <!-- KPI 2: Ingresos Totales -->
+                        <Border Margin="0,0,14,0" CornerRadius="12" Background="#1E1E24" Padding="20,18">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="8"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="6"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+                                <Border Width="36" Height="36" CornerRadius="8" Background="#1A3020">
+                                    <TextBlock Text="&#xE8D1;" FontFamily="Segoe MDL2 Assets"
+                                               FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                               Foreground="#00E676"/>
+                                </Border>
+                                <Viewbox Grid.Row="2" MaxHeight="46" HorizontalAlignment="Left" Stretch="Uniform">
+                                    <TextBlock Text="{Binding IngresosTotales, StringFormat=C}"
+                                               FontSize="34" FontWeight="Bold" Foreground="#00E676"/>
+                                </Viewbox>
+                                <TextBlock Grid.Row="4" Text="Ingresos Totales"
+                                           FontSize="13" Foreground="{StaticResource MutedTextBrush}"/>
+                            </Grid>
+                        </Border>
+
+                        <!-- KPI 3: Método de Pago Más Usado -->
+                        <Border Margin="0,0,14,0" CornerRadius="12" Background="#1E1E24" Padding="20,18">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="8"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="6"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+                                <Border Width="36" Height="36" CornerRadius="8" Background="#1A2840">
+                                    <TextBlock Text="&#xE8C0;" FontFamily="Segoe MDL2 Assets"
+                                               FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                               Foreground="#38BDF8"/>
+                                </Border>
+                                <TextBlock Grid.Row="2" Text="{Binding MetodoPagoMasUsado}"
+                                           FontSize="26" FontWeight="Bold" Foreground="White"
+                                           TextTrimming="CharacterEllipsis"/>
+                                <TextBlock Grid.Row="4" Text="Método Más Usado"
+                                           FontSize="13" Foreground="{StaticResource MutedTextBrush}"/>
+                            </Grid>
+                        </Border>
+
+                        <!-- KPI 4: Producto Más Popular -->
+                        <Border CornerRadius="12" Background="#1E1E24" Padding="20,18">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="8"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="6"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+                                <Border Width="36" Height="36" CornerRadius="8" Background="#2A1A10">
+                                    <TextBlock Text="&#xE734;" FontFamily="Segoe MDL2 Assets"
+                                               FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                               Foreground="#FB923C"/>
+                                </Border>
+                                <TextBlock Grid.Row="2" Text="{Binding ProductoMasPopular}"
+                                           FontSize="22" FontWeight="Bold" Foreground="White"
+                                           TextTrimming="CharacterEllipsis"/>
+                                <TextBlock Grid.Row="4" Text="Producto Más Popular"
+                                           FontSize="13" Foreground="{StaticResource MutedTextBrush}"/>
+                            </Grid>
+                        </Border>
+                    </UniformGrid>
+
+                    <!-- ── Sub-TabControl de navegación ── -->
+                    <Border Grid.Row="4" Background="#1E1E24" CornerRadius="10" Padding="6,4">
+                        <StackPanel Orientation="Horizontal">
+                            <StackPanel.Resources>
+                                <Style x:Key="MetricaTab" TargetType="Button">
+                                    <Setter Property="Background" Value="Transparent"/>
+                                    <Setter Property="Foreground" Value="{StaticResource MutedTextBrush}"/>
+                                    <Setter Property="BorderThickness" Value="0"/>
+                                    <Setter Property="Padding" Value="16,8"/>
+                                    <Setter Property="Cursor" Value="Hand"/>
+                                    <Setter Property="FontSize" Value="13"/>
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border Background="{TemplateBinding Background}"
+                                                        CornerRadius="6" Padding="{TemplateBinding Padding}">
+                                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                </Border>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </StackPanel.Resources>
+                            <!-- Tab activo = Ventas (índice 0) -->
+                            <Button Content="Ventas" Style="{StaticResource MetricaTab}"
+                                    Background="#2D2D3A" Foreground="White" FontWeight="SemiBold"
+                                    Command="{Binding LoadCommand}"/>
+                            <Button Content="Tendencias"        Style="{StaticResource MetricaTab}"/>
+                            <Button Content="Métodos de Pago"   Style="{StaticResource MetricaTab}"/>
+                            <Button Content="Historial de Caja" Style="{StaticResource MetricaTab}"/>
+                            <Button Content="Carrito Abandonado" Style="{StaticResource MetricaTab}"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- ── Ventas Realizadas: búsqueda + DataGrid ── -->
+                    <Border Grid.Row="6" Background="#1E1E24" CornerRadius="12" Padding="18">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="14"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="12"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+
+                            <!-- Título + Refresh -->
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock Text="Ventas Realizadas" FontSize="17" FontWeight="SemiBold"/>
+                                    <TextBlock Text="{Binding StatusMessage}"
+                                               Foreground="{StaticResource MutedTextBrush}" FontSize="12"/>
+                                </StackPanel>
+                                <Button Grid.Column="1" Content="↻ Actualizar"
+                                        Style="{StaticResource PrimaryButton}"
+                                        VerticalAlignment="Top"
+                                        Command="{Binding LoadCommand}"/>
+                            </Grid>
+
+                            <!-- Barra de búsqueda -->
+                            <Border Grid.Row="2" Background="#2A2A33" CornerRadius="8" Padding="12,0">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="&#xE721;" FontFamily="Segoe MDL2 Assets"
+                                               Foreground="{StaticResource MutedTextBrush}"
+                                               FontSize="15" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                                    <TextBox Grid.Column="1"
+                                             Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                                             Background="Transparent" BorderThickness="0"
+                                             Foreground="White" CaretBrush="White"
+                                             Padding="0,10"
+                                             FontSize="14"/>
+                                </Grid>
+                            </Border>
+
+                            <!-- DataGrid de Ventas -->
+                            <DataGrid Grid.Row="4"
+                                      ItemsSource="{Binding Ventas}"
+                                      SelectedItem="{Binding SelectedVenta}"
+                                      IsReadOnly="True"
+                                      ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                      ScrollViewer.CanContentScroll="True"
+                                      Background="#1E1E24"
+                                      RowBackground="#1E1E24"
+                                      AlternatingRowBackground="#22222C"
+                                      BorderThickness="0"
+                                      GridLinesVisibility="Horizontal"
+                                      HorizontalGridLinesBrush="#2D2D3A"
+                                      HeadersVisibility="Column"
+                                      AutoGenerateColumns="False"
+                                      CanUserAddRows="False">
+
+                                <!-- Estilos de fila hover -->
+                                <DataGrid.RowStyle>
+                                    <Style TargetType="DataGridRow">
+                                        <Setter Property="Background" Value="#1E1E24"/>
+                                        <Style.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter Property="Background" Value="#28283A"/>
+                                            </Trigger>
+                                            <Trigger Property="IsSelected" Value="True">
+                                                <Setter Property="Background" Value="#2D2D50"/>
+                                            </Trigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </DataGrid.RowStyle>
+
+                                <DataGrid.Columns>
+                                    <!-- ID corto -->
+                                    <DataGridTextColumn Header="ID" Width="100" IsReadOnly="True">
+                                        <DataGridTextColumn.Binding>
+                                            <Binding Path="Id" Converter="{x:Null}"/>
+                                        </DataGridTextColumn.Binding>
+                                        <DataGridTextColumn.ElementStyle>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Foreground" Value="{StaticResource MutedTextBrush}"/>
+                                                <Setter Property="FontSize" Value="11"/>
+                                                <Setter Property="VerticalAlignment" Value="Center"/>
+                                                <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+                                                <Setter Property="ToolTip" Value="{Binding Id}"/>
+                                            </Style>
+                                        </DataGridTextColumn.ElementStyle>
+                                    </DataGridTextColumn>
+
+                                    <!-- Fecha -->
+                                    <DataGridTextColumn Header="Fecha" Binding="{Binding Fecha, StringFormat={}{0:dd/MM/yy HH:mm}}"
+                                                        Width="130" IsReadOnly="True"/>
+
+                                    <!-- Productos (resumen) -->
+                                    <DataGridTextColumn Header="Productos" Binding="{Binding ProductosResumen}"
+                                                        Width="*" IsReadOnly="True">
+                                        <DataGridTextColumn.ElementStyle>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Foreground" Value="{StaticResource MutedTextBrush}"/>
+                                                <Setter Property="VerticalAlignment" Value="Center"/>
+                                                <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+                                                <Setter Property="ToolTip" Value="{Binding ProductosResumen}"/>
+                                            </Style>
+                                        </DataGridTextColumn.ElementStyle>
+                                    </DataGridTextColumn>
+
+                                    <!-- Método de Pago -->
+                                    <DataGridTextColumn Header="Método Pago" Binding="{Binding MetodoPago}"
+                                                        Width="120" IsReadOnly="True"/>
+
+                                    <!-- Total -->
+                                    <DataGridTextColumn Header="Total" Binding="{Binding Total, StringFormat=C}"
+                                                        Width="100" IsReadOnly="True">
+                                        <DataGridTextColumn.ElementStyle>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Foreground" Value="#00E676"/>
+                                                <Setter Property="FontWeight" Value="SemiBold"/>
+                                                <Setter Property="VerticalAlignment" Value="Center"/>
+                                            </Style>
+                                        </DataGridTextColumn.ElementStyle>
+                                    </DataGridTextColumn>
+
+                                    <!-- Factura (checkbox visual) -->
+                                    <DataGridTemplateColumn Header="Factura" Width="70">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                           FontFamily="Segoe MDL2 Assets" FontSize="16">
+                                                    <TextBlock.Style>
+                                                        <Style TargetType="TextBlock">
+                                                            <Setter Property="Text" Value="&#xE894;"/>
+                                                            <Setter Property="Foreground" Value="#555"/>
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding Factura}" Value="True">
+                                                                    <Setter Property="Text" Value="&#xE73E;"/>
+                                                                    <Setter Property="Foreground" Value="#00E676"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </TextBlock.Style>
+                                                </TextBlock>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+
+                                    <!-- Estado Badge -->
+                                    <DataGridTemplateColumn Header="Estado" Width="120">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <Border CornerRadius="20" Padding="10,4"
+                                                        HorizontalAlignment="Center" VerticalAlignment="Center">
+                                                    <Border.Style>
+                                                        <Style TargetType="Border">
+                                                            <Setter Property="Background" Value="#1A2840"/>
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding Estado}" Value="Cancelada">
+                                                                    <Setter Property="Background" Value="#3D0F0F"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </Border.Style>
+                                                    <TextBlock Text="{Binding Estado}"
+                                                               FontSize="12" FontWeight="SemiBold"
+                                                               HorizontalAlignment="Center">
+                                                        <TextBlock.Style>
+                                                            <Style TargetType="TextBlock">
+                                                                <Setter Property="Foreground" Value="#38BDF8"/>
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding Estado}" Value="Cancelada">
+                                                                        <Setter Property="Foreground" Value="#F87171"/>
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </TextBlock.Style>
+                                                    </TextBlock>
+                                                </Border>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+
+                                    <!-- Acciones -->
+                                    <DataGridTemplateColumn Header="Acciones" Width="90">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <Button Content="..."
+                                                        ToolTip="Cancelar venta"
+                                                        Padding="10,4"
+                                                        Background="#2D2D3A"
+                                                        Foreground="White"
+                                                        BorderThickness="0"
+                                                        Cursor="Hand"
+                                                        HorizontalAlignment="Center"
+                                                        Command="{Binding DataContext.CancelarVentaCommand,
+                                                                  RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                        CommandParameter="{Binding}">
+                                                    <Button.Template>
+                                                        <ControlTemplate TargetType="Button">
+                                                            <Border Background="{TemplateBinding Background}"
+                                                                    CornerRadius="6" Padding="{TemplateBinding Padding}">
+                                                                <ContentPresenter HorizontalAlignment="Center"
+                                                                                  VerticalAlignment="Center"/>
+                                                            </Border>
+                                                        </ControlTemplate>
+                                                    </Button.Template>
+                                                </Button>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </Grid>
+                    </Border>
                 </Grid>
             </TabItem>
         </TabControl>

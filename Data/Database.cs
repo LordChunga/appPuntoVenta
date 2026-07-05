@@ -46,6 +46,27 @@ public sealed class Database
                 FOREIGN KEY (CategoryId) REFERENCES Categories(Id)
             );
 
+            CREATE TABLE IF NOT EXISTS Ventas (
+                Id      TEXT PRIMARY KEY,
+                Fecha   TEXT NOT NULL,
+                Usuario TEXT NOT NULL DEFAULT 'Isabel',
+                Cliente TEXT NOT NULL DEFAULT 'Consumidor Final',
+                MetodoPago TEXT NOT NULL DEFAULT 'Efectivo',
+                Total   NUMERIC NOT NULL CHECK (Total >= 0),
+                Factura INTEGER NOT NULL DEFAULT 0,
+                Estado  TEXT NOT NULL DEFAULT 'Completada'
+            );
+
+            CREATE TABLE IF NOT EXISTS VentasDetalle (
+                Id              INTEGER PRIMARY KEY AUTOINCREMENT,
+                VentaId         TEXT NOT NULL,
+                ProductoNombre  TEXT NOT NULL,
+                Cantidad        INTEGER NOT NULL CHECK (Cantidad > 0),
+                PrecioUnitario  NUMERIC NOT NULL CHECK (PrecioUnitario >= 0),
+                Subtotal        NUMERIC NOT NULL CHECK (Subtotal >= 0),
+                FOREIGN KEY (VentaId) REFERENCES Ventas(Id)
+            );
+
             INSERT OR IGNORE INTO Categories (Name) VALUES
                 ('alfajores'),
                 ('botellas');

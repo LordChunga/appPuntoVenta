@@ -203,13 +203,27 @@ public sealed class StoreRepository(Database database)
             new { ProductId = productId, Quantity = quantity });
     }
 
-    public async Task ConfirmSaleAsync(IEnumerable<CartItem> cartItems)
+    /// <summary>
+    /// Confirma la venta: descuenta stock, inserta en Ventas y VentasDetalle dentro de una
+    /// única transacción. Retorna el Id (GUID) de la venta creada.
+    /// </summary>
+    public async Task<string> ConfirmSaleAsync(
+        IEnumerable<CartItem> cartItems,
+        string metodoPago = "Efectivo",
+        string cliente = "Consumidor Final",
+        bool factura = false,
+        string usuario = "Isabel")
     {
         using var connection = database.CreateConnection();
         connection.Open();
         using var transaction = connection.BeginTransaction();
 
-        foreach (var item in cartItems)
+        var ventaId = Guid.NewGuid().ToString();
+        var items = cartItems.ToList();
+        var total = items.Sum(i => i.LineTotal);
+
+        // 1. Descontar stock con validación
+        foreach (var item in items)
         {
             var updated = await connection.ExecuteAsync("""
                 UPDATE Products
@@ -225,6 +239,145 @@ public sealed class StoreRepository(Database database)
             }
         }
 
+        // 2. Insertar cabecera de venta
+        await connection.ExecuteAsync("""
+            INSERT INTO Ventas (Id, Fecha, Usuario, Cliente, MetodoPago, Total, Factura, Estado)
+            VALUES (@Id, @Fecha, @Usuario, @Cliente, @MetodoPago, @Total, @Factura, 'Completada');
+            """, new
+        {
+            Id = ventaId,
+            Fecha = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
+            Usuario = usuario,
+            Cliente = cliente,
+            MetodoPago = metodoPago,
+            Total = total,
+            Factura = factura ? 1 : 0
+        }, transaction);
+
+        // 3. Insertar detalle de cada ítem
+        foreach (var item in items)
+        {
+            await connection.ExecuteAsync("""
+                INSERT INTO VentasDetalle (VentaId, ProductoNombre, Cantidad, PrecioUnitario, Subtotal)
+                VALUES (@VentaId, @ProductoNombre, @Cantidad, @PrecioUnitario, @Subtotal);
+                """, new
+            {
+                VentaId = ventaId,
+                ProductoNombre = item.Name,
+                Cantidad = item.Quantity,
+                PrecioUnitario = item.UnitPrice,
+                Subtotal = item.LineTotal
+            }, transaction);
+        }
+
         transaction.Commit();
+        return ventaId;
+    }
+
+    /// <summary>
+    /// Cancela una venta (cambia Estado a "Cancelada") y repone el stock de sus ítems.
+    /// </summary>
+    public async Task CancelarVentaAsync(string ventaId)
+    {
+        using var connection = database.CreateConnection();
+        connection.Open();
+        using var transaction = connection.BeginTransaction();
+
+        var detalles = await connection.QueryAsync<VentaDetalle>(
+            "SELECT * FROM VentasDetalle WHERE VentaId = @VentaId;",
+            new { VentaId = ventaId }, transaction);
+
+        foreach (var d in detalles)
+        {
+            // Reponer stock buscando por nombre (mejor unir por ProductId en una extensión futura)
+            await connection.ExecuteAsync("""
+                UPDATE Products SET Stock = Stock + @Cantidad WHERE Name = @Nombre;
+                """, new { d.Cantidad, Nombre = d.ProductoNombre }, transaction);
+        }
+
+        await connection.ExecuteAsync(
+            "UPDATE Ventas SET Estado = 'Cancelada' WHERE Id = @Id;",
+            new { Id = ventaId }, transaction);
+
+        transaction.Commit();
+    }
+
+    /// <summary>
+    /// Retorna la lista de ventas con un resumen de productos por fila.
+    /// </summary>
+    public async Task<IReadOnlyList<Venta>> GetVentasAsync(string? searchText = null)
+    {
+        using var connection = database.CreateConnection();
+
+        var ventas = await connection.QueryAsync<Venta>("""
+            SELECT
+                v.Id,
+                v.Fecha,
+                v.Usuario,
+                v.Cliente,
+                v.MetodoPago,
+                v.Total,
+                v.Factura,
+                v.Estado,
+                IFNULL(
+                    (SELECT GROUP_CONCAT(d.ProductoNombre || ' x' || d.Cantidad, ', ')
+                     FROM VentasDetalle d WHERE d.VentaId = v.Id),
+                    ''
+                ) AS ProductosResumen
+            FROM Ventas v
+            WHERE @Search = ''
+               OR v.Id LIKE @Term
+               OR v.Cliente LIKE @Term
+               OR v.MetodoPago LIKE @Term
+               OR v.Estado LIKE @Term
+            ORDER BY v.Fecha DESC;
+            """, new
+        {
+            Search = searchText?.Trim() ?? string.Empty,
+            Term = $"%{searchText?.Trim() ?? string.Empty}%"
+        });
+
+        return ventas.ToList();
+    }
+
+    /// <summary>
+    /// Calcula los 4 KPIs para la vista Métricas usando Dapper directamente.
+    /// </summary>
+    public async Task<MetricasKpis> GetMetricasKpisAsync()
+    {
+        using var connection = database.CreateConnection();
+
+        var totalVentas = await connection.ExecuteScalarAsync<int>(
+            "SELECT COUNT(*) FROM Ventas WHERE Estado = 'Completada';");
+
+        var ingresosTotales = await connection.ExecuteScalarAsync<decimal>(
+            "SELECT IFNULL(SUM(Total), 0) FROM Ventas WHERE Estado = 'Completada';");
+
+        var metodoPago = await connection.ExecuteScalarAsync<string?>("""
+            SELECT MetodoPago
+            FROM Ventas
+            WHERE Estado = 'Completada'
+            GROUP BY MetodoPago
+            ORDER BY COUNT(*) DESC
+            LIMIT 1;
+            """) ?? "-";
+
+        var productoPopular = await connection.ExecuteScalarAsync<string?>("""
+            SELECT d.ProductoNombre
+            FROM VentasDetalle d
+            INNER JOIN Ventas v ON v.Id = d.VentaId
+            WHERE v.Estado = 'Completada'
+            GROUP BY d.ProductoNombre
+            ORDER BY SUM(d.Cantidad) DESC
+            LIMIT 1;
+            """) ?? "-";
+
+        return new MetricasKpis
+        {
+            TotalVentas = totalVentas,
+            IngresosTotales = ingresosTotales,
+            MetodoPagoMasUsado = metodoPago,
+            ProductoMasPopular = productoPopular
+        };
     }
 }
