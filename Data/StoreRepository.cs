@@ -189,6 +189,61 @@ public sealed class StoreRepository(Database database)
         return new ProductImportResult(importedProducts, skippedProducts, createdCategories, 0);
     }
 
+    // ── Clients ───────────────────────────────────────────────
+
+    public async Task<IReadOnlyList<Client>> SearchClientsAsync(string? searchText = null)
+    {
+        using var connection = database.CreateConnection();
+        var term = $"%{searchText?.Trim() ?? string.Empty}%";
+
+        var rows = await connection.QueryAsync<Client>("""
+            SELECT Id, Nombre, Telefono, FechaRegistro, TotalCompras, DeudaTotal
+            FROM Clients
+            WHERE @Search = ''
+               OR Nombre LIKE @Term
+               OR Telefono LIKE @Term
+            ORDER BY Nombre;
+            """, new { Search = searchText?.Trim() ?? string.Empty, Term = term });
+
+        return rows.ToList();
+    }
+
+    public async Task<IReadOnlyList<Client>> GetAllClientsAsync()
+    {
+        using var connection = database.CreateConnection();
+        var rows = await connection.QueryAsync<Client>(
+            "SELECT Id, Nombre, Telefono, FechaRegistro, TotalCompras, DeudaTotal FROM Clients ORDER BY Nombre;");
+        return rows.ToList();
+    }
+
+    public async Task SaveClientAsync(Client client)
+    {
+        using var connection = database.CreateConnection();
+
+        if (client.Id == 0)
+        {
+            await connection.ExecuteAsync("""
+                INSERT INTO Clients (Nombre, Telefono)
+                VALUES (@Nombre, @Telefono);
+                """, client);
+            return;
+        }
+
+        await connection.ExecuteAsync("""
+            UPDATE Clients
+            SET Nombre = @Nombre,
+                Telefono = @Telefono,
+                DeudaTotal = @DeudaTotal
+            WHERE Id = @Id;
+            """, client);
+    }
+
+    public async Task DeleteClientAsync(int clientId)
+    {
+        using var connection = database.CreateConnection();
+        await connection.ExecuteAsync("DELETE FROM Clients WHERE Id = @Id;", new { Id = clientId });
+    }
+
     public async Task DeleteProductAsync(int productId)
     {
         using var connection = database.CreateConnection();
@@ -212,7 +267,8 @@ public sealed class StoreRepository(Database database)
         string metodoPago = "Efectivo",
         string cliente = "Consumidor Final",
         bool factura = false,
-        string usuario = "Isabel")
+        string usuario = "Isabel",
+        int? clientId = null)
     {
         using var connection = database.CreateConnection();
         connection.Open();
@@ -271,6 +327,17 @@ public sealed class StoreRepository(Database database)
         }
 
         transaction.Commit();
+
+        // Update client purchase stats outside the sale transaction
+        if (clientId is not null)
+        {
+            await connection.ExecuteAsync("""
+                UPDATE Clients
+                SET TotalCompras = TotalCompras + 1
+                WHERE Id = @Id;
+                """, new { Id = clientId.Value });
+        }
+
         return ventaId;
     }
 

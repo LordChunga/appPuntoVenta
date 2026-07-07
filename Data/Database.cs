@@ -67,12 +67,22 @@ public sealed class Database
                 FOREIGN KEY (VentaId) REFERENCES Ventas(Id)
             );
 
+            CREATE TABLE IF NOT EXISTS Clients (
+                Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                Nombre TEXT NOT NULL,
+                Telefono TEXT NOT NULL DEFAULT '',
+                FechaRegistro TEXT NOT NULL DEFAULT (datetime('now','localtime')),
+                TotalCompras INTEGER NOT NULL DEFAULT 0,
+                DeudaTotal NUMERIC NOT NULL DEFAULT 0
+            );
+
             INSERT OR IGNORE INTO Categories (Name) VALUES
                 ('alfajores'),
                 ('botellas');
             """);
 
         await MigrateRemoveUniqueConstraintsAsync(connection);
+        await MigrateAddClientIdToVentasAsync(connection);
     }
 
     private static async Task MigrateRemoveUniqueConstraintsAsync(IDbConnection connection)
@@ -105,5 +115,20 @@ public sealed class Database
 
             ALTER TABLE Products_new RENAME TO Products;
             """);
+    }
+
+    private static async Task MigrateAddClientIdToVentasAsync(IDbConnection connection)
+    {
+        var columns = await connection.QueryAsync<dynamic>(
+            "PRAGMA table_info(Ventas);");
+
+        var hasClientId = columns.Any(c => ((string)c.name) == "ClientId");
+        if (hasClientId)
+        {
+            return;
+        }
+
+        await connection.ExecuteAsync(
+            "ALTER TABLE Ventas ADD COLUMN ClientId INTEGER REFERENCES Clients(Id);");
     }
 }

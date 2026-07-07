@@ -85,6 +85,36 @@ public sealed partial class MainViewModel : ObservableObject
     [ObservableProperty]
     private ObservableCollection<CartItem> cart = [];
 
+    // ── Clients ───────────────────────────────────────────────
+
+    [ObservableProperty]
+    private ObservableCollection<Client> clients = [];
+
+    [ObservableProperty]
+    private ObservableCollection<Client> posClients = [];
+
+    [ObservableProperty]
+    private Client? selectedPosClient;
+
+    [ObservableProperty]
+    private string clientSearchText = string.Empty;
+
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(SaveClientCommand))]
+    private int editingClientId;
+
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(SaveClientCommand))]
+    private string clientNombre = string.Empty;
+
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(SaveClientCommand))]
+    private string clientTelefono = string.Empty;
+
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(DeleteClientCommand))]
+    private Client? selectedClient;
+
     [ObservableProperty]
     private string statusMessage = "Listo.";
 
@@ -140,12 +170,21 @@ public sealed partial class MainViewModel : ObservableObject
         _ = SearchPurchaseProductsAsync();
     }
 
+    partial void OnClientSearchTextChanged(string value)
+    {
+        _ = SearchClientsAsync();
+    }
+
     // Índice 4 = pestaña Métricas → cargar datos automáticamente al navegar
     partial void OnActiveTabIndexChanged(int value)
     {
         if (value == 4)
         {
             _ = Metricas.LoadAsync();
+        }
+        else if (value == 5)
+        {
+            _ = SearchClientsAsync();
         }
     }
 
@@ -156,6 +195,7 @@ public sealed partial class MainViewModel : ObservableObject
         await SearchProductsAsync();
         await SearchSaleProductsAsync();
         await SearchPurchaseProductsAsync();
+        await RefreshPosClientsAsync();
         SelectedCategory ??= Categories.FirstOrDefault();
         StatusMessage = "Datos cargados.";
     }
@@ -455,9 +495,10 @@ public sealed partial class MainViewModel : ObservableObject
     {
         try
         {
-            await repository.ConfirmSaleAsync(Cart, metodoPago: MetodoPago);
+            await repository.ConfirmSaleAsync(Cart, metodoPago: MetodoPago, clientId: SelectedPosClient?.Id);
             Cart.Clear();
             MetodoPago = "Efectivo";   // resetear al método por defecto
+            SelectedPosClient = null;  // resetear cliente
             await SearchProductsAsync();
             await SearchPurchaseProductsAsync();
             // Refrescar métricas en background para mantener KPIs actualizados
@@ -487,6 +528,94 @@ public sealed partial class MainViewModel : ObservableObject
         Cart.Clear();
         StatusMessage = "Carrito vaciado.";
         ConfirmSaleCommand.NotifyCanExecuteChanged();
+    }
+
+    // ── Client Commands ───────────────────────────────────────
+
+    [RelayCommand]
+    private async Task SearchClientsAsync()
+    {
+        var rows = await repository.SearchClientsAsync(ClientSearchText);
+        Clients = new ObservableCollection<Client>(rows);
+    }
+
+    [RelayCommand(CanExecute = nameof(CanSaveClient))]
+    private async Task SaveClientAsync()
+    {
+        try
+        {
+            var client = new Client
+            {
+                Id = EditingClientId,
+                Nombre = ClientNombre.Trim(),
+                Telefono = ClientTelefono.Trim()
+            };
+
+            await repository.SaveClientAsync(client);
+            StatusMessage = EditingClientId == 0 ? "Cliente creado." : "Cliente actualizado.";
+            ClearClientForm();
+            await SearchClientsAsync();
+            await RefreshPosClientsAsync();
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"No se pudo guardar el cliente: {ex.Message}";
+        }
+    }
+
+    private bool CanSaveClient() => !string.IsNullOrWhiteSpace(ClientNombre);
+
+    [RelayCommand(CanExecute = nameof(CanDeleteClient))]
+    private async Task DeleteClientAsync()
+    {
+        if (SelectedClient is null) return;
+
+        try
+        {
+            await repository.DeleteClientAsync(SelectedClient.Id);
+            StatusMessage = $"Cliente '{SelectedClient.Nombre}' eliminado.";
+            ClearClientForm();
+            await SearchClientsAsync();
+            await RefreshPosClientsAsync();
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"No se pudo eliminar: {ex.Message}";
+        }
+    }
+
+    private bool CanDeleteClient() => SelectedClient is not null;
+
+    [RelayCommand]
+    private void EditClient(Client? client)
+    {
+        if (client is null) return;
+
+        EditingClientId = client.Id;
+        ClientNombre = client.Nombre;
+        ClientTelefono = client.Telefono;
+        SelectedClient = client;
+    }
+
+    [RelayCommand]
+    private void NewClient()
+    {
+        ClearClientForm();
+        StatusMessage = "Formulario listo para un nuevo cliente.";
+    }
+
+    private void ClearClientForm()
+    {
+        EditingClientId = 0;
+        ClientNombre = string.Empty;
+        ClientTelefono = string.Empty;
+        SelectedClient = null;
+    }
+
+    private async Task RefreshPosClientsAsync()
+    {
+        var rows = await repository.GetAllClientsAsync();
+        PosClients = new ObservableCollection<Client>(rows);
     }
 
     private async Task RefreshCategoriesAsync()

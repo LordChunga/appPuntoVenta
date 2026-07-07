@@ -270,6 +270,7 @@
                         <ListBoxItem Content="Inventario" />
                         <ListBoxItem Content="Compras" />
                         <ListBoxItem Content="Métricas" />
+                        <ListBoxItem Content="Clientes" />
                     </ListBox>
                 </StackPanel>
 
@@ -429,7 +430,19 @@
 
                                 <StackPanel>
                                     <TextBlock Text="Cliente" Foreground="{StaticResource MutedTextBrush}" Margin="0,0,0,8" />
-                                    <TextBox Text="Consumidor Final" IsReadOnly="True" />
+                                    <ComboBox ItemsSource="{Binding PosClients}"
+                                              SelectedItem="{Binding SelectedPosClient}"
+                                              TextSearch.TextPath="Nombre"
+                                              IsEditable="False">
+                                        <ComboBox.ItemTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding Nombre}" Foreground="{StaticResource TextBrush}" />
+                                            </DataTemplate>
+                                        </ComboBox.ItemTemplate>
+                                    </ComboBox>
+                                    <TextBlock Text="Sin cliente = Consumidor Final"
+                                               Foreground="{StaticResource DimTextBrush}"
+                                               FontSize="11" Margin="0,4,0,0" />
                                 </StackPanel>
 
                                 <StackPanel Grid.Row="2">
@@ -1196,6 +1209,133 @@
                                     </DataGridTemplateColumn>
                                 </DataGrid.Columns>
                             </DataGrid>
+                        </Grid>
+                    </Border>
+                </Grid>
+            </TabItem>
+
+            <!-- ====== CLIENTES TAB ====== -->
+            <TabItem Header="Clientes">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <!-- Header -->
+                    <Grid Margin="0,0,0,20">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <TextBlock Text="Clientes" FontSize="32" FontWeight="Bold" />
+                            <TextBlock Text="Gestiona tus clientes y sus cuentas corrientes."
+                                       Foreground="{StaticResource MutedTextBrush}" Margin="0,6,0,0" />
+                        </StackPanel>
+                        <Button Grid.Column="1"
+                                Content="+ Nuevo Cliente"
+                                Style="{StaticResource PrimaryButton}"
+                                VerticalAlignment="Top"
+                                Command="{Binding NewClientCommand}" />
+                    </Grid>
+
+                    <!-- Search Bar -->
+                    <Border Grid.Row="1" Style="{StaticResource PanelBorder}" Padding="16" Margin="0,0,0,16">
+                        <TextBox Text="{Binding ClientSearchText, UpdateSourceTrigger=PropertyChanged}"
+                                 FontSize="15">
+                            <TextBox.InputBindings>
+                                <KeyBinding Key="Enter" Command="{Binding SearchClientsCommand}" />
+                            </TextBox.InputBindings>
+                        </TextBox>
+                    </Border>
+
+                    <!-- Content: Form + DataGrid -->
+                    <Grid Grid.Row="2">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="340" />
+                            <ColumnDefinition Width="24" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Client Form Panel -->
+                        <Border Style="{StaticResource PanelBorder}" Padding="18">
+                            <StackPanel>
+                                <TextBlock Text="Datos del cliente" FontSize="18" FontWeight="SemiBold" Margin="0,0,0,16" />
+
+                                <TextBlock Text="Nombre" Foreground="{StaticResource MutedTextBrush}" Margin="0,0,0,6" />
+                                <TextBox Margin="0,0,0,12"
+                                         Text="{Binding ClientNombre, UpdateSourceTrigger=PropertyChanged}" />
+
+                                <TextBlock Text="Teléfono / Contacto" Foreground="{StaticResource MutedTextBrush}" Margin="0,0,0,6" />
+                                <TextBox Margin="0,0,0,20"
+                                         Text="{Binding ClientTelefono, UpdateSourceTrigger=PropertyChanged}" />
+
+                                <UniformGrid Columns="3" Margin="0,0,0,0">
+                                    <Button Content="Nuevo" Margin="0,0,8,0"
+                                            Style="{StaticResource RoundedButton}"
+                                            Command="{Binding NewClientCommand}" />
+                                    <Button Content="Guardar" Margin="0,0,8,0"
+                                            Style="{StaticResource PrimaryButton}"
+                                            Command="{Binding SaveClientCommand}" />
+                                    <Button Content="Eliminar"
+                                            Style="{StaticResource DangerButton}"
+                                            Command="{Binding DeleteClientCommand}" />
+                                </UniformGrid>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Client DataGrid -->
+                        <Border Grid.Column="2" Style="{StaticResource PanelBorder}" Padding="16">
+                            <DataGrid ItemsSource="{Binding Clients}"
+                                      SelectedItem="{Binding SelectedClient}"
+                                      IsReadOnly="True"
+                                      ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                      ScrollViewer.CanContentScroll="True">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Cliente" Binding="{Binding Nombre}" Width="*" />
+                                    <DataGridTextColumn Header="Contacto" Binding="{Binding Telefono}" Width="140" />
+                                    <DataGridTextColumn Header="Compras" Binding="{Binding TotalCompras}" Width="90" />
+                                    <DataGridTextColumn Header="Deuda Total" Binding="{Binding DeudaTotal, StringFormat=C}" Width="120" />
+                                    <DataGridTextColumn Header="Registro" Binding="{Binding FechaRegistro}" Width="160" />
+                                    <DataGridTemplateColumn Header="Acciones" Width="140">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                                    <Button Content="✏"
+                                                            ToolTip="Editar"
+                                                            Style="{StaticResource SmallIconButton}"
+                                                            Command="{Binding DataContext.EditClientCommand,
+                                                                      RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                            CommandParameter="{Binding}"
+                                                            Margin="0,0,4,0" />
+                                                    <Button ToolTip="Eliminar"
+                                                            Style="{StaticResource DangerButton}"
+                                                            Padding="6,4"
+                                                            MinHeight="34"
+                                                            Command="{Binding DataContext.DeleteClientCommand,
+                                                                      RelativeSource={RelativeSource AncestorType=DataGrid}}">
+                                                        <TextBlock Text="&#xE74D;" FontFamily="Segoe MDL2 Assets" />
+                                                    </Button>
+                                                </StackPanel>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </Border>
+                    </Grid>
+
+                    <!-- Footer -->
+                    <Border Grid.Row="3" Style="{StaticResource PanelBorder}" Padding="14,10" Margin="0,16,0,0">
+                        <Grid>
+                            <TextBlock Foreground="{StaticResource MutedTextBrush}" FontSize="12">
+                                <Run Text="Mostrando" />
+                                <Run Text="{Binding Clients.Count, Mode=OneWay}" />
+                                <Run Text="cliente(s)" />
+                            </TextBlock>
                         </Grid>
                     </Border>
                 </Grid>
