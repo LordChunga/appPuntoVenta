@@ -610,6 +610,14 @@ public sealed partial class MainViewModel : ObservableObject
     }
 
     [RelayCommand]
+    private void CancelClientEdit()
+    {
+        ClearClientForm();
+        IsClientFormVisible = false;
+        StatusMessage = "Operación cancelada.";
+    }
+
+    [RelayCommand]
     private void EditClient(Client? client)
     {
         if (client is null) return;

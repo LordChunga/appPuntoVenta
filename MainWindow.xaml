@@ -849,8 +849,6 @@
                         <RowDefinition Height="16" />
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="16" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="16" />
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
 
@@ -959,42 +957,8 @@
                         </Border>
                     </UniformGrid>
 
-                    <!-- ── Sub-TabControl de navegación ── -->
-                    <Border Grid.Row="4" Background="#1E1E24" CornerRadius="10" Padding="6,4">
-                        <StackPanel Orientation="Horizontal">
-                            <StackPanel.Resources>
-                                <Style x:Key="MetricaTab" TargetType="Button">
-                                    <Setter Property="Background" Value="Transparent"/>
-                                    <Setter Property="Foreground" Value="{StaticResource MutedTextBrush}"/>
-                                    <Setter Property="BorderThickness" Value="0"/>
-                                    <Setter Property="Padding" Value="16,8"/>
-                                    <Setter Property="Cursor" Value="Hand"/>
-                                    <Setter Property="FontSize" Value="13"/>
-                                    <Setter Property="Template">
-                                        <Setter.Value>
-                                            <ControlTemplate TargetType="Button">
-                                                <Border Background="{TemplateBinding Background}"
-                                                        CornerRadius="6" Padding="{TemplateBinding Padding}">
-                                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                                </Border>
-                                            </ControlTemplate>
-                                        </Setter.Value>
-                                    </Setter>
-                                </Style>
-                            </StackPanel.Resources>
-                            <!-- Tab activo = Ventas (índice 0) -->
-                            <Button Content="Ventas" Style="{StaticResource MetricaTab}"
-                                    Background="#2D2D3A" Foreground="White" FontWeight="SemiBold"
-                                    Command="{Binding LoadCommand}"/>
-                            <Button Content="Tendencias"        Style="{StaticResource MetricaTab}"/>
-                            <Button Content="Métodos de Pago"   Style="{StaticResource MetricaTab}"/>
-                            <Button Content="Historial de Caja" Style="{StaticResource MetricaTab}"/>
-                            <Button Content="Carrito Abandonado" Style="{StaticResource MetricaTab}"/>
-                        </StackPanel>
-                    </Border>
-
                     <!-- ── Ventas Realizadas: búsqueda + DataGrid ── -->
-                    <Border Grid.Row="6" Background="#1E1E24" CornerRadius="12" Padding="18">
+                    <Border Grid.Row="4" Background="#1E1E24" CornerRadius="12" Padding="18">
                         <Grid>
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto"/>
@@ -1227,7 +1191,7 @@
                                 Content="+ Nuevo Cliente"
                                 Style="{StaticResource PrimaryButton}"
                                 VerticalAlignment="Top"
-                                Command="{Binding NewClientCommand}" />
+                                Command="{Binding OpenNewClientCommand}" />
                     </Grid>
 
                     <!-- Search Bar -->
@@ -1243,13 +1207,13 @@
                     <!-- Content: Form + DataGrid -->
                     <Grid Grid.Row="2">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="340" />
-                            <ColumnDefinition Width="24" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
 
                         <!-- Client Form Panel -->
-                        <Border Style="{StaticResource PanelBorder}" Padding="18" Visibility="{Binding IsClientFormVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
+                        <Border Grid.Column="0" Width="340" Style="{StaticResource PanelBorder}" Padding="18" Visibility="{Binding IsClientFormVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
                             <StackPanel>
                                 <TextBlock Text="Datos del cliente" FontSize="18" FontWeight="SemiBold" Margin="0,0,0,16" />
 
@@ -1262,9 +1226,9 @@
                                          Text="{Binding ClientTelefono, UpdateSourceTrigger=PropertyChanged}" />
 
                                 <UniformGrid Columns="3" Margin="0,0,0,0">
-                                    <Button Content="Nuevo" Margin="0,0,8,0"
+                                    <Button Content="Cancelar" Margin="0,0,8,0"
                                             Style="{StaticResource RoundedButton}"
-                                            Command="{Binding NewClientCommand}" />
+                                            Command="{Binding CancelClientEditCommand}" />
                                     <Button Content="Guardar" Margin="0,0,8,0"
                                             Style="{StaticResource PrimaryButton}"
                                             Command="{Binding SaveClientCommand}" />
@@ -1295,7 +1259,7 @@
                                                     <Button Content="✏"
                                                             ToolTip="Editar"
                                                             Style="{StaticResource SmallIconButton}"
-                                                            Command="{Binding DataContext.EditClientCommand,
+                                                            Command="{Binding DataContext.OpenEditClientCommand,
                                                                       RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                                             CommandParameter="{Binding}"
                                                             Margin="0,0,4,0" />
