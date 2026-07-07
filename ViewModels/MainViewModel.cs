@@ -116,6 +116,9 @@ public sealed partial class MainViewModel : ObservableObject
     private Client? selectedClient;
 
     [ObservableProperty]
+    private bool isClientFormVisible;
+
+    [ObservableProperty]
     private string statusMessage = "Listo.";
 
     /// <summary>Opciones de método de pago disponibles en el POS.</summary>
@@ -495,10 +498,13 @@ public sealed partial class MainViewModel : ObservableObject
     {
         try
         {
-            await repository.ConfirmSaleAsync(Cart, metodoPago: MetodoPago, clientId: SelectedPosClient?.Id);
+            int? finalClientId = SelectedPosClient?.Id > 0 ? SelectedPosClient.Id : null;
+            string finalClienteName = SelectedPosClient?.Id > 0 ? SelectedPosClient.Nombre : "Consumidor Final";
+
+            await repository.ConfirmSaleAsync(Cart, metodoPago: MetodoPago, cliente: finalClienteName, clientId: finalClientId);
             Cart.Clear();
             MetodoPago = "Efectivo";   // resetear al método por defecto
-            SelectedPosClient = null;  // resetear cliente
+            SelectedPosClient = PosClients.FirstOrDefault();  // resetear cliente a Consumidor Final
             await SearchProductsAsync();
             await SearchPurchaseProductsAsync();
             // Refrescar métricas en background para mantener KPIs actualizados
@@ -554,6 +560,7 @@ public sealed partial class MainViewModel : ObservableObject
             await repository.SaveClientAsync(client);
             StatusMessage = EditingClientId == 0 ? "Cliente creado." : "Cliente actualizado.";
             ClearClientForm();
+            IsClientFormVisible = false;
             await SearchClientsAsync();
             await RefreshPosClientsAsync();
         }
@@ -587,6 +594,22 @@ public sealed partial class MainViewModel : ObservableObject
     private bool CanDeleteClient() => SelectedClient is not null;
 
     [RelayCommand]
+    private void OpenEditClient(Client? client)
+    {
+        if (client is null) return;
+        EditClient(client);
+        IsClientFormVisible = true;
+    }
+
+    [RelayCommand]
+    private void OpenNewClient()
+    {
+        ClearClientForm();
+        IsClientFormVisible = true;
+        StatusMessage = "Formulario listo para un nuevo cliente.";
+    }
+
+    [RelayCommand]
     private void EditClient(Client? client)
     {
         if (client is null) return;
@@ -615,7 +638,10 @@ public sealed partial class MainViewModel : ObservableObject
     private async Task RefreshPosClientsAsync()
     {
         var rows = await repository.GetAllClientsAsync();
-        PosClients = new ObservableCollection<Client>(rows);
+        var list = new ObservableCollection<Client>(rows);
+        list.Insert(0, new Client { Id = 0, Nombre = "Consumidor Final" });
+        PosClients = list;
+        SelectedPosClient = list.FirstOrDefault();
     }
 
     private async Task RefreshCategoriesAsync()

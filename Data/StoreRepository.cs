@@ -277,6 +277,13 @@ public sealed class StoreRepository(Database database)
         var ventaId = Guid.NewGuid().ToString();
         var items = cartItems.ToList();
         var total = items.Sum(i => i.LineTotal);
+        var estado = metodoPago == "Transferencia" ? "Pendiente" : "Completada";
+
+        // Generate InvoiceNumber
+        var todayStr = DateTime.Now.ToString("yyMMdd");
+        var countToday = await connection.ExecuteScalarAsync<int>(
+            "SELECT COUNT(*) FROM Ventas WHERE date(Fecha) = date('now', 'localtime');", transaction);
+        var invoiceNumber = $"{todayStr}-{(countToday + 1):D3}";
 
         // 1. Descontar stock con validación
         foreach (var item in items)
@@ -297,8 +304,8 @@ public sealed class StoreRepository(Database database)
 
         // 2. Insertar cabecera de venta
         await connection.ExecuteAsync("""
-            INSERT INTO Ventas (Id, Fecha, Usuario, Cliente, MetodoPago, Total, Factura, Estado)
-            VALUES (@Id, @Fecha, @Usuario, @Cliente, @MetodoPago, @Total, @Factura, 'Completada');
+            INSERT INTO Ventas (Id, Fecha, Usuario, Cliente, MetodoPago, Total, Factura, Estado, InvoiceNumber, ClientId)
+            VALUES (@Id, @Fecha, @Usuario, @Cliente, @MetodoPago, @Total, @Factura, @Estado, @InvoiceNumber, @ClientId);
             """, new
         {
             Id = ventaId,
@@ -307,7 +314,10 @@ public sealed class StoreRepository(Database database)
             Cliente = cliente,
             MetodoPago = metodoPago,
             Total = total,
-            Factura = factura ? 1 : 0
+            Factura = factura ? 1 : 0,
+            Estado = estado,
+            InvoiceNumber = invoiceNumber,
+            ClientId = clientId
         }, transaction);
 
         // 3. Insertar detalle de cada ítem
@@ -369,6 +379,23 @@ public sealed class StoreRepository(Database database)
         transaction.Commit();
     }
 
+    public async Task AceptarTransferenciaAsync(string ventaId)
+    {
+        using var connection = database.CreateConnection();
+        await connection.ExecuteAsync(
+            "UPDATE Ventas SET Estado = 'Completada' WHERE Id = @Id;",
+            new { Id = ventaId });
+    }
+
+    public async Task<IReadOnlyList<VentaDetalle>> GetVentaDetallesAsync(string ventaId)
+    {
+        using var connection = database.CreateConnection();
+        var rows = await connection.QueryAsync<VentaDetalle>(
+            "SELECT * FROM VentasDetalle WHERE VentaId = @VentaId;",
+            new { VentaId = ventaId });
+        return rows.ToList();
+    }
+
     /// <summary>
     /// Retorna la lista de ventas con un resumen de productos por fila.
     /// </summary>
@@ -386,6 +413,7 @@ public sealed class StoreRepository(Database database)
                 v.Total,
                 v.Factura,
                 v.Estado,
+                v.InvoiceNumber,
                 IFNULL(
                     (SELECT GROUP_CONCAT(d.ProductoNombre || ' x' || d.Cantidad, ', ')
                      FROM VentasDetalle d WHERE d.VentaId = v.Id),
@@ -394,6 +422,7 @@ public sealed class StoreRepository(Database database)
             FROM Ventas v
             WHERE @Search = ''
                OR v.Id LIKE @Term
+               OR v.InvoiceNumber LIKE @Term
                OR v.Cliente LIKE @Term
                OR v.MetodoPago LIKE @Term
                OR v.Estado LIKE @Term

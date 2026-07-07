@@ -21,7 +21,11 @@ public sealed partial class MetricasViewModel : ObservableObject
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(CancelarVentaCommand))]
+    [NotifyCanExecuteChangedFor(nameof(AceptarTransferenciaCommand))]
     private Venta? selectedVenta;
+
+    [ObservableProperty] private bool isSaleDetailsVisible;
+    [ObservableProperty] private ObservableCollection<VentaDetalle> selectedVentaDetalles = [];
 
     [ObservableProperty] private string searchText = string.Empty;
     [ObservableProperty] private string statusMessage = string.Empty;
@@ -69,7 +73,7 @@ public sealed partial class MetricasViewModel : ObservableObject
         try
         {
             await repository.CancelarVentaAsync(SelectedVenta.Id);
-            StatusMessage = $"Venta {SelectedVenta.Id[..8]}… cancelada.";
+            StatusMessage = $"Venta {SelectedVenta.InvoiceNumber} cancelada.";
             await LoadAsync();
         }
         catch (Exception ex)
@@ -80,4 +84,42 @@ public sealed partial class MetricasViewModel : ObservableObject
 
     private bool CanCancelarVenta() =>
         SelectedVenta is not null && SelectedVenta.Estado == "Completada";
+
+    [RelayCommand(CanExecute = nameof(CanAceptarTransferencia))]
+    private async Task AceptarTransferenciaAsync()
+    {
+        if (SelectedVenta is null) return;
+
+        try
+        {
+            await repository.AceptarTransferenciaAsync(SelectedVenta.Id);
+            StatusMessage = $"Transferencia {SelectedVenta.InvoiceNumber} aceptada.";
+            await LoadAsync();
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"No se pudo aceptar: {ex.Message}";
+        }
+    }
+
+    private bool CanAceptarTransferencia() =>
+        SelectedVenta is not null && SelectedVenta.Estado == "Pendiente" && SelectedVenta.MetodoPago == "Transferencia";
+
+    [RelayCommand]
+    private async Task ShowSaleDetailsAsync(Venta? venta)
+    {
+        var target = venta ?? SelectedVenta;
+        if (target is null) return;
+
+        var detalles = await repository.GetVentaDetallesAsync(target.Id);
+        SelectedVentaDetalles = new ObservableCollection<VentaDetalle>(detalles);
+        IsSaleDetailsVisible = true;
+    }
+
+    [RelayCommand]
+    private void CloseSaleDetails()
+    {
+        IsSaleDetailsVisible = false;
+        SelectedVentaDetalles.Clear();
+    }
 }

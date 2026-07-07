@@ -54,7 +54,8 @@ public sealed class Database
                 MetodoPago TEXT NOT NULL DEFAULT 'Efectivo',
                 Total   NUMERIC NOT NULL CHECK (Total >= 0),
                 Factura INTEGER NOT NULL DEFAULT 0,
-                Estado  TEXT NOT NULL DEFAULT 'Completada'
+                Estado  TEXT NOT NULL DEFAULT 'Completada',
+                InvoiceNumber TEXT NOT NULL DEFAULT ''
             );
 
             CREATE TABLE IF NOT EXISTS VentasDetalle (
@@ -83,6 +84,7 @@ public sealed class Database
 
         await MigrateRemoveUniqueConstraintsAsync(connection);
         await MigrateAddClientIdToVentasAsync(connection);
+        await MigrateAddInvoiceNumberToVentasAsync(connection);
     }
 
     private static async Task MigrateRemoveUniqueConstraintsAsync(IDbConnection connection)
@@ -130,5 +132,18 @@ public sealed class Database
 
         await connection.ExecuteAsync(
             "ALTER TABLE Ventas ADD COLUMN ClientId INTEGER REFERENCES Clients(Id);");
+    }
+
+    private static async Task MigrateAddInvoiceNumberToVentasAsync(IDbConnection connection)
+    {
+        var columns = await connection.QueryAsync<dynamic>(
+            "PRAGMA table_info(Ventas);");
+
+        var hasInvoiceNumber = columns.Any(c => ((string)c.name) == "InvoiceNumber");
+        if (!hasInvoiceNumber)
+        {
+            await connection.ExecuteAsync(
+                "ALTER TABLE Ventas ADD COLUMN InvoiceNumber TEXT NOT NULL DEFAULT '';");
+        }
     }
 }

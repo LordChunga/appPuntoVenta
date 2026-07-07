@@ -11,6 +11,7 @@
         Foreground="White"
         FontFamily="Segoe UI">
     <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
         <SolidColorBrush x:Key="AppBackground" Color="#121212" />
         <SolidColorBrush x:Key="SidebarBackground" Color="#17171C" />
         <SolidColorBrush x:Key="PanelBackground" Color="#1E1E24" />
@@ -1075,7 +1076,7 @@
                                     <!-- ID corto -->
                                     <DataGridTextColumn Header="ID" Width="100" IsReadOnly="True">
                                         <DataGridTextColumn.Binding>
-                                            <Binding Path="Id" Converter="{x:Null}"/>
+                                            <Binding Path="InvoiceNumber" Converter="{x:Null}"/>
                                         </DataGridTextColumn.Binding>
                                         <DataGridTextColumn.ElementStyle>
                                             <Style TargetType="TextBlock">
@@ -1083,7 +1084,7 @@
                                                 <Setter Property="FontSize" Value="11"/>
                                                 <Setter Property="VerticalAlignment" Value="Center"/>
                                                 <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
-                                                <Setter Property="ToolTip" Value="{Binding Id}"/>
+                                                <Setter Property="ToolTip" Value="{Binding InvoiceNumber}"/>
                                             </Style>
                                         </DataGridTextColumn.ElementStyle>
                                     </DataGridTextColumn>
@@ -1092,15 +1093,15 @@
                                     <DataGridTextColumn Header="Fecha" Binding="{Binding Fecha, StringFormat={}{0:dd/MM/yy HH:mm}}"
                                                         Width="130" IsReadOnly="True"/>
 
-                                    <!-- Productos (resumen) -->
-                                    <DataGridTextColumn Header="Productos" Binding="{Binding ProductosResumen}"
+                                    <!-- Cliente -->
+                                    <DataGridTextColumn Header="Cliente" Binding="{Binding Cliente}"
                                                         Width="*" IsReadOnly="True">
                                         <DataGridTextColumn.ElementStyle>
                                             <Style TargetType="TextBlock">
-                                                <Setter Property="Foreground" Value="{StaticResource MutedTextBrush}"/>
+                                                <Setter Property="Foreground" Value="{StaticResource TextBrush}"/>
                                                 <Setter Property="VerticalAlignment" Value="Center"/>
                                                 <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
-                                                <Setter Property="ToolTip" Value="{Binding ProductosResumen}"/>
+                                                <Setter Property="ToolTip" Value="{Binding Cliente}"/>
                                             </Style>
                                         </DataGridTextColumn.ElementStyle>
                                     </DataGridTextColumn>
@@ -1121,25 +1122,16 @@
                                         </DataGridTextColumn.ElementStyle>
                                     </DataGridTextColumn>
 
-                                    <!-- Factura (checkbox visual) -->
+                                    <!-- Factura (Detalles Modal) -->
                                     <DataGridTemplateColumn Header="Factura" Width="70">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
-                                                <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center"
-                                                           FontFamily="Segoe MDL2 Assets" FontSize="16">
-                                                    <TextBlock.Style>
-                                                        <Style TargetType="TextBlock">
-                                                            <Setter Property="Text" Value="&#xE894;"/>
-                                                            <Setter Property="Foreground" Value="#555"/>
-                                                            <Style.Triggers>
-                                                                <DataTrigger Binding="{Binding Factura}" Value="True">
-                                                                    <Setter Property="Text" Value="&#xE73E;"/>
-                                                                    <Setter Property="Foreground" Value="#00E676"/>
-                                                                </DataTrigger>
-                                                            </Style.Triggers>
-                                                        </Style>
-                                                    </TextBlock.Style>
-                                                </TextBlock>
+                                                <Button Content="&#xE8F1;" FontFamily="Segoe MDL2 Assets"
+                                                        ToolTip="Ver detalle"
+                                                        Style="{StaticResource SmallIconButton}"
+                                                        HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                        Command="{Binding DataContext.ShowSaleDetailsCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                        CommandParameter="{Binding}" />
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
@@ -1167,6 +1159,9 @@
                                                             <Style TargetType="TextBlock">
                                                                 <Setter Property="Foreground" Value="#38BDF8"/>
                                                                 <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding Estado}" Value="Pendiente">
+                                                                        <Setter Property="Foreground" Value="#FBBF24"/>
+                                                                    </DataTrigger>
                                                                     <DataTrigger Binding="{Binding Estado}" Value="Cancelada">
                                                                         <Setter Property="Foreground" Value="#F87171"/>
                                                                     </DataTrigger>
@@ -1180,30 +1175,23 @@
                                     </DataGridTemplateColumn>
 
                                     <!-- Acciones -->
-                                    <DataGridTemplateColumn Header="Acciones" Width="90">
+                                    <DataGridTemplateColumn Header="Acciones" Width="100">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
-                                                <Button Content="..."
-                                                        ToolTip="Cancelar venta"
-                                                        Padding="10,4"
-                                                        Background="#2D2D3A"
-                                                        Foreground="White"
-                                                        BorderThickness="0"
-                                                        Cursor="Hand"
-                                                        HorizontalAlignment="Center"
-                                                        Command="{Binding DataContext.CancelarVentaCommand,
-                                                                  RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                                        CommandParameter="{Binding}">
-                                                    <Button.Template>
-                                                        <ControlTemplate TargetType="Button">
-                                                            <Border Background="{TemplateBinding Background}"
-                                                                    CornerRadius="6" Padding="{TemplateBinding Padding}">
-                                                                <ContentPresenter HorizontalAlignment="Center"
-                                                                                  VerticalAlignment="Center"/>
-                                                            </Border>
-                                                        </ControlTemplate>
-                                                    </Button.Template>
-                                                </Button>
+                                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                                    <Button Content="&#xE8FB;" FontFamily="Segoe MDL2 Assets"
+                                                            ToolTip="Aceptar Transferencia"
+                                                            Style="{StaticResource SmallIconButton}"
+                                                            Foreground="#00E676"
+                                                            Margin="0,0,4,0"
+                                                            Command="{Binding DataContext.AceptarTransferenciaCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" />
+                                                    <Button Content="&#xE711;" FontFamily="Segoe MDL2 Assets"
+                                                            ToolTip="Cancelar venta"
+                                                            Style="{StaticResource DangerButton}"
+                                                            Padding="6,4"
+                                                            MinHeight="34"
+                                                            Command="{Binding DataContext.CancelarVentaCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"/>
+                                                </StackPanel>
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
@@ -1261,7 +1249,7 @@
                         </Grid.ColumnDefinitions>
 
                         <!-- Client Form Panel -->
-                        <Border Style="{StaticResource PanelBorder}" Padding="18">
+                        <Border Style="{StaticResource PanelBorder}" Padding="18" Visibility="{Binding IsClientFormVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
                             <StackPanel>
                                 <TextBlock Text="Datos del cliente" FontSize="18" FontWeight="SemiBold" Margin="0,0,0,16" />
 
@@ -1341,5 +1329,37 @@
                 </Grid>
             </TabItem>
         </TabControl>
+
+        <!-- Sale Details Modal -->
+        <Grid Background="#B2000000" Visibility="{Binding Metricas.IsSaleDetailsVisible, Converter={StaticResource BooleanToVisibilityConverter}}" Grid.ColumnSpan="2">
+            <Border Style="{StaticResource PanelBorder}" Background="#1E1E24" Width="500" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="20">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
+                        <TextBlock Text="&#xE8F1;" FontFamily="Segoe MDL2 Assets" FontSize="20" Foreground="{StaticResource AccentBrush}" Margin="0,0,10,0"/>
+                        <TextBlock Text="Detalle de Venta" FontSize="20" FontWeight="Bold"/>
+                    </StackPanel>
+                    
+                    <DataGrid Grid.Row="1" ItemsSource="{Binding Metricas.SelectedVentaDetalles}" 
+                              IsReadOnly="True" AutoGenerateColumns="False" MaxHeight="300"
+                              Background="#2A2A33" RowBackground="#2A2A33" AlternatingRowBackground="#2D2D3A"
+                              BorderThickness="0" GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#3A3A44">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Producto" Binding="{Binding ProductoNombre}" Width="*" />
+                            <DataGridTextColumn Header="Cant" Binding="{Binding Cantidad}" Width="60" />
+                            <DataGridTextColumn Header="Precio" Binding="{Binding PrecioUnitario, StringFormat=C}" Width="90" />
+                            <DataGridTextColumn Header="Subtotal" Binding="{Binding Subtotal, StringFormat=C}" Width="100" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <Button Grid.Row="2" Content="Cerrar" Style="{StaticResource PrimaryButton}" Margin="0,20,0,0" HorizontalAlignment="Right" Command="{Binding Metricas.CloseSaleDetailsCommand}" Width="100"/>
+                </Grid>
+            </Border>
+        </Grid>
     </Grid>
 </Window>
