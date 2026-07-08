@@ -464,6 +464,15 @@ public sealed class StoreRepository(Database database)
         return debts.ToList();
     }
 
+    public async Task<bool> HasPendingSalesAsync(int clientId)
+    {
+        using var connection = database.CreateConnection();
+        var count = await connection.ExecuteScalarAsync<int>(
+            "SELECT COUNT(*) FROM Ventas WHERE ClientId = @ClientId AND Estado = 'Pendiente';",
+            new { ClientId = clientId });
+        return count > 0;
+    }
+
     public async Task<IReadOnlyList<Venta>> GetVentasAsync(string? searchText = null)
     {
         using var connection = database.CreateConnection();

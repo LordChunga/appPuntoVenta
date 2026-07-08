@@ -596,6 +596,19 @@ public sealed partial class MainViewModel : ObservableObject
         var target = client ?? SelectedClient;
         if (target is null) return;
 
+        if (target.DeudaTotal > 0)
+        {
+            StatusMessage = "No se puede eliminar este cliente porque tiene una deuda pendiente.";
+            return;
+        }
+
+        bool hasPendingSales = await repository.HasPendingSalesAsync(target.Id);
+        if (hasPendingSales)
+        {
+            StatusMessage = "No se puede borrar este cliente porque tiene una transferencia pendiente.";
+            return;
+        }
+
         try
         {
             await repository.DeleteClientAsync(target.Id);
