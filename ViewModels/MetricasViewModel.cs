@@ -21,8 +21,8 @@ public sealed partial class MetricasViewModel : ObservableObject
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(CancelarVentaCommand))]
-    [NotifyCanExecuteChangedFor(nameof(CancelarVentaCommand))]
     [NotifyCanExecuteChangedFor(nameof(AceptarTransferenciaCommand))]
+    [NotifyCanExecuteChangedFor(nameof(EliminarVentaCommand))]
     private Venta? selectedVenta;
 
     [ObservableProperty] private bool isSaleDetailsVisible;
@@ -114,7 +114,7 @@ public sealed partial class MetricasViewModel : ObservableObject
         return target is not null && target.Estado == "Pendiente" && target.MetodoPago == "Transferencia";
     }
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanEliminarVenta))]
     private async Task EliminarVentaAsync(Venta? venta)
     {
         var target = venta ?? SelectedVenta;
@@ -130,6 +130,12 @@ public sealed partial class MetricasViewModel : ObservableObject
         {
             StatusMessage = $"No se pudo eliminar la venta: {ex.Message}";
         }
+    }
+
+    private bool CanEliminarVenta(Venta? venta)
+    {
+        var target = venta ?? SelectedVenta;
+        return target is not null && target.Estado == "Cancelada";
     }
 
     [RelayCommand]

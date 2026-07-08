@@ -409,17 +409,6 @@ public sealed class StoreRepository(Database database)
         connection.Open();
         using var transaction = connection.BeginTransaction();
 
-        var detalles = await connection.QueryAsync<VentaDetalle>(
-            "SELECT * FROM VentasDetalle WHERE VentaId = @VentaId;",
-            new { VentaId = ventaId }, transaction);
-
-        foreach (var d in detalles)
-        {
-            await connection.ExecuteAsync("""
-                UPDATE Products SET Stock = Stock + @Cantidad WHERE Name = @Nombre;
-                """, new { d.Cantidad, Nombre = d.ProductoNombre }, transaction);
-        }
-
         await connection.ExecuteAsync("DELETE FROM VentasDetalle WHERE VentaId = @Id;", new { Id = ventaId }, transaction);
         await connection.ExecuteAsync("DELETE FROM Ventas WHERE Id = @Id;", new { Id = ventaId }, transaction);
 
