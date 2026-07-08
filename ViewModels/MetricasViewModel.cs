@@ -87,7 +87,7 @@ public sealed partial class MetricasViewModel : ObservableObject
     private bool CanCancelarVenta(Venta? venta)
     {
         var target = venta ?? SelectedVenta;
-        return target is not null && target.Estado == "Completada";
+        return target is not null && target.Estado != "Cancelada";
     }
 
     [RelayCommand(CanExecute = nameof(CanAceptarTransferencia))]
