@@ -294,7 +294,7 @@
                     </Border>
                     <StackPanel Margin="10,0,0,0" VerticalAlignment="Center">
                         <TextBlock Text="Isabel" FontWeight="SemiBold" />
-                        <TextBlock Text="{Binding StatusMessage}" Foreground="{StaticResource MutedTextBrush}" FontSize="12" />
+                        <TextBlock Text="{Binding StatusMessage}" Foreground="{StaticResource MutedTextBrush}" FontSize="12" ToolTip="{Binding StatusMessage}" TextWrapping="Wrap" />
                     </StackPanel>
                 </StackPanel>
             </Grid>
@@ -995,7 +995,7 @@
                                 <StackPanel>
                                     <TextBlock Text="Ventas Realizadas" FontSize="17" FontWeight="SemiBold"/>
                                     <TextBlock Text="{Binding StatusMessage}"
-                                               Foreground="{StaticResource MutedTextBrush}" FontSize="12"/>
+                                               Foreground="{StaticResource MutedTextBrush}" FontSize="12" ToolTip="{Binding StatusMessage}" TextWrapping="Wrap"/>
                                 </StackPanel>
                                 <Button Grid.Column="1" Content="↻ Actualizar"
                                         Style="{StaticResource PrimaryButton}"

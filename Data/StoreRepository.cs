@@ -241,7 +241,19 @@ public sealed class StoreRepository(Database database)
     public async Task DeleteClientAsync(int clientId)
     {
         using var connection = database.CreateConnection();
-        await connection.ExecuteAsync("DELETE FROM Clients WHERE Id = @Id;", new { Id = clientId });
+        connection.Open();
+        using var transaction = connection.BeginTransaction();
+        try
+        {
+            await connection.ExecuteAsync("UPDATE Ventas SET ClientId = NULL WHERE ClientId = @Id;", new { Id = clientId }, transaction);
+            await connection.ExecuteAsync("DELETE FROM Clients WHERE Id = @Id;", new { Id = clientId }, transaction);
+            transaction.Commit();
+        }
+        catch
+        {
+            transaction.Rollback();
+            throw;
+        }
     }
 
     public async Task DeleteProductAsync(int productId)
