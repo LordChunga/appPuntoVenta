@@ -67,14 +67,15 @@ public sealed partial class MetricasViewModel : ObservableObject
     }
 
     [RelayCommand(CanExecute = nameof(CanCancelarVenta))]
-    private async Task CancelarVentaAsync()
+    private async Task CancelarVentaAsync(Venta? venta)
     {
-        if (SelectedVenta is null) return;
+        var target = venta ?? SelectedVenta;
+        if (target is null) return;
 
         try
         {
-            await repository.CancelarVentaAsync(SelectedVenta.Id);
-            StatusMessage = $"Venta {SelectedVenta.InvoiceNumber} cancelada.";
+            await repository.CancelarVentaAsync(target.Id);
+            StatusMessage = $"Venta {target.InvoiceNumber} cancelada.";
             await LoadAsync();
         }
         catch (Exception ex)
@@ -83,18 +84,22 @@ public sealed partial class MetricasViewModel : ObservableObject
         }
     }
 
-    private bool CanCancelarVenta() =>
-        SelectedVenta is not null && SelectedVenta.Estado == "Completada";
+    private bool CanCancelarVenta(Venta? venta)
+    {
+        var target = venta ?? SelectedVenta;
+        return target is not null && target.Estado == "Completada";
+    }
 
     [RelayCommand(CanExecute = nameof(CanAceptarTransferencia))]
-    private async Task AceptarTransferenciaAsync()
+    private async Task AceptarTransferenciaAsync(Venta? venta)
     {
-        if (SelectedVenta is null) return;
+        var target = venta ?? SelectedVenta;
+        if (target is null) return;
 
         try
         {
-            await repository.AceptarTransferenciaAsync(SelectedVenta.Id);
-            StatusMessage = $"Transferencia {SelectedVenta.InvoiceNumber} aceptada.";
+            await repository.AceptarTransferenciaAsync(target.Id);
+            StatusMessage = $"Transferencia {target.InvoiceNumber} aceptada.";
             await LoadAsync();
         }
         catch (Exception ex)
@@ -103,18 +108,22 @@ public sealed partial class MetricasViewModel : ObservableObject
         }
     }
 
-    private bool CanAceptarTransferencia() =>
-        SelectedVenta is not null && SelectedVenta.Estado == "Pendiente" && SelectedVenta.MetodoPago == "Transferencia";
+    private bool CanAceptarTransferencia(Venta? venta)
+    {
+        var target = venta ?? SelectedVenta;
+        return target is not null && target.Estado == "Pendiente" && target.MetodoPago == "Transferencia";
+    }
 
     [RelayCommand(CanExecute = nameof(CanConfirmarPagoCuentaCorriente))]
-    private async Task ConfirmarPagoCuentaCorrienteAsync()
+    private async Task ConfirmarPagoCuentaCorrienteAsync(Venta? venta)
     {
-        if (SelectedVenta is null || !SelectedVenta.ClientId.HasValue) return;
+        var target = venta ?? SelectedVenta;
+        if (target is null || !target.ClientId.HasValue) return;
 
         try
         {
-            await repository.ConfirmarPagoCuentaCorrienteAsync(SelectedVenta.Id, SelectedVenta.ClientId.Value, SelectedVenta.Total);
-            StatusMessage = $"Pago de cuenta corriente confirmado (Factura: {SelectedVenta.InvoiceNumber}).";
+            await repository.ConfirmarPagoCuentaCorrienteAsync(target.Id, target.ClientId.Value, target.Total);
+            StatusMessage = $"Pago de cuenta corriente confirmado (Factura: {target.InvoiceNumber}).";
             await LoadAsync();
         }
         catch (Exception ex)
@@ -123,8 +132,29 @@ public sealed partial class MetricasViewModel : ObservableObject
         }
     }
 
-    private bool CanConfirmarPagoCuentaCorriente() =>
-        SelectedVenta is not null && SelectedVenta.Estado == "En Deuda" && SelectedVenta.MetodoPago == "Cuenta Corriente";
+    private bool CanConfirmarPagoCuentaCorriente(Venta? venta)
+    {
+        var target = venta ?? SelectedVenta;
+        return target is not null && target.Estado == "En Deuda" && target.MetodoPago == "Cuenta Corriente";
+    }
+
+    [RelayCommand]
+    private async Task EliminarVentaAsync(Venta? venta)
+    {
+        var target = venta ?? SelectedVenta;
+        if (target is null) return;
+
+        try
+        {
+            await repository.EliminarVentaAsync(target.Id);
+            StatusMessage = $"Venta {target.InvoiceNumber} eliminada correctamente.";
+            await LoadAsync();
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"No se pudo eliminar la venta: {ex.Message}";
+        }
+    }
 
     [RelayCommand]
     private async Task ShowSaleDetailsAsync(Venta? venta)

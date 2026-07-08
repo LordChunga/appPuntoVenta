@@ -388,6 +388,32 @@ public sealed class StoreRepository(Database database)
         transaction.Commit();
     }
 
+    /// <summary>
+    /// Elimina una venta físicamente de la base de datos y repone el stock.
+    /// </summary>
+    public async Task EliminarVentaAsync(string ventaId)
+    {
+        using var connection = database.CreateConnection();
+        connection.Open();
+        using var transaction = connection.BeginTransaction();
+
+        var detalles = await connection.QueryAsync<VentaDetalle>(
+            "SELECT * FROM VentasDetalle WHERE VentaId = @VentaId;",
+            new { VentaId = ventaId }, transaction);
+
+        foreach (var d in detalles)
+        {
+            await connection.ExecuteAsync("""
+                UPDATE Products SET Stock = Stock + @Cantidad WHERE Name = @Nombre;
+                """, new { d.Cantidad, Nombre = d.ProductoNombre }, transaction);
+        }
+
+        await connection.ExecuteAsync("DELETE FROM VentasDetalle WHERE VentaId = @Id;", new { Id = ventaId }, transaction);
+        await connection.ExecuteAsync("DELETE FROM Ventas WHERE Id = @Id;", new { Id = ventaId }, transaction);
+
+        transaction.Commit();
+    }
+
     public async Task AceptarTransferenciaAsync(string ventaId)
     {
         using var connection = database.CreateConnection();

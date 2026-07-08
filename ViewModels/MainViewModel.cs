@@ -112,7 +112,6 @@ public sealed partial class MainViewModel : ObservableObject
     private string clientTelefono = string.Empty;
 
     [ObservableProperty]
-    [NotifyCanExecuteChangedFor(nameof(DeleteClientCommand))]
     private Client? selectedClient;
 
     [ObservableProperty]
@@ -585,15 +584,16 @@ public sealed partial class MainViewModel : ObservableObject
 
     private bool CanSaveClient() => !string.IsNullOrWhiteSpace(ClientNombre);
 
-    [RelayCommand(CanExecute = nameof(CanDeleteClient))]
-    private async Task DeleteClientAsync()
+    [RelayCommand]
+    private async Task DeleteClientAsync(Client? client)
     {
-        if (SelectedClient is null) return;
+        var target = client ?? SelectedClient;
+        if (target is null) return;
 
         try
         {
-            await repository.DeleteClientAsync(SelectedClient.Id);
-            StatusMessage = $"Cliente '{SelectedClient.Nombre}' eliminado.";
+            await repository.DeleteClientAsync(target.Id);
+            StatusMessage = $"Cliente '{target.Nombre}' eliminado.";
             ClearClientForm();
             await SearchClientsAsync();
             await RefreshPosClientsAsync();
@@ -603,8 +603,6 @@ public sealed partial class MainViewModel : ObservableObject
             StatusMessage = $"No se pudo eliminar: {ex.Message}";
         }
     }
-
-    private bool CanDeleteClient() => SelectedClient is not null;
 
     [RelayCommand]
     private void OpenEditClient(Client? client)
