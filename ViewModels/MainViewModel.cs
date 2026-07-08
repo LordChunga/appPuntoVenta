@@ -517,7 +517,7 @@ public sealed partial class MainViewModel : ObservableObject
             }
 
             int? finalClientId = SelectedPosClient?.Id > 0 ? SelectedPosClient.Id : null;
-            string finalClienteName = SelectedPosClient?.Id > 0 ? SelectedPosClient.Nombre : "Consumidor Final";
+            string finalClienteName = "Consumidor Final";
 
             await repository.ConfirmSaleAsync(Cart, metodoPago: MetodoPago, cliente: finalClienteName, clientId: finalClientId);
             Cart.Clear();

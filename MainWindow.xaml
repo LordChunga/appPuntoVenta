@@ -1075,19 +1075,6 @@
                                     <DataGridTextColumn Header="Fecha" Binding="{Binding Fecha, StringFormat={}{0:dd/MM/yy HH:mm}}"
                                                         Width="130" IsReadOnly="True"/>
 
-                                    <!-- Cliente -->
-                                    <DataGridTextColumn Header="Cliente" Binding="{Binding Cliente}"
-                                                        Width="*" IsReadOnly="True">
-                                        <DataGridTextColumn.ElementStyle>
-                                            <Style TargetType="TextBlock">
-                                                <Setter Property="Foreground" Value="{StaticResource TextBrush}"/>
-                                                <Setter Property="VerticalAlignment" Value="Center"/>
-                                                <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
-                                                <Setter Property="ToolTip" Value="{Binding Cliente}"/>
-                                            </Style>
-                                        </DataGridTextColumn.ElementStyle>
-                                    </DataGridTextColumn>
-
                                     <!-- Método de Pago -->
                                     <DataGridTextColumn Header="Método Pago" Binding="{Binding MetodoPago}"
                                                         Width="120" IsReadOnly="True"/>

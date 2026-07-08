@@ -489,7 +489,6 @@ public sealed class StoreRepository(Database database)
             WHERE @Search = ''
                OR v.Id LIKE @Term
                OR v.InvoiceNumber LIKE @Term
-               OR v.Cliente LIKE @Term
                OR v.MetodoPago LIKE @Term
                OR v.Estado LIKE @Term
             ORDER BY v.Fecha DESC;
