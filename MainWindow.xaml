@@ -1183,9 +1183,6 @@
                                                             <MenuItem Header="Ver Detalles" 
                                                                       Command="{Binding PlacementTarget.Tag.ShowSaleDetailsCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" 
                                                                       CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
-                                                            <MenuItem Header="Confirmar Pago" 
-                                                                      Command="{Binding PlacementTarget.Tag.ConfirmarPagoCuentaCorrienteCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" 
-                                                                      CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
                                                             <MenuItem Header="Cancelar Venta" 
                                                                       Command="{Binding PlacementTarget.Tag.CancelarVentaCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" 
                                                                       CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
@@ -1291,10 +1288,17 @@
                                     <DataGridTextColumn Header="Compras" Binding="{Binding TotalCompras}" Width="90" />
                                     <DataGridTextColumn Header="Deuda Total" Binding="{Binding DeudaTotal, StringFormat=C}" Width="120" />
                                     <DataGridTextColumn Header="Registro" Binding="{Binding FechaRegistro}" Width="160" />
-                                    <DataGridTemplateColumn Header="Acciones" Width="140">
+                                    <DataGridTemplateColumn Header="Acciones" Width="180">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
                                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                                    <Button Content="Ver Cuenta"
+                                                            Style="{StaticResource PrimaryButton}"
+                                                            Padding="10,4"
+                                                            Margin="0,0,4,0"
+                                                            MinHeight="34"
+                                                            Command="{Binding DataContext.OpenClientAccountCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                            CommandParameter="{Binding}" />
                                                     <Button Content="✏"
                                                             ToolTip="Editar"
                                                             Style="{StaticResource SmallIconButton}"
@@ -1333,6 +1337,50 @@
                 </Grid>
             </TabItem>
         </TabControl>
+
+        <!-- Client Account Modal -->
+        <Grid Background="#B2000000" Visibility="{Binding IsClientAccountVisible, Converter={StaticResource BooleanToVisibilityConverter}}" Grid.ColumnSpan="2">
+            <Border Style="{StaticResource PanelBorder}" Background="#1E1E24" Width="600" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="20">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
+                        <TextBlock Text="&#xEA8C;" FontFamily="Segoe MDL2 Assets" FontSize="20" Foreground="{StaticResource AccentBrush}" Margin="0,0,10,0"/>
+                        <TextBlock Text="{Binding SelectedClient.Nombre, StringFormat=Cuenta Corriente: {0}}" FontSize="20" FontWeight="Bold"/>
+                        <TextBlock Text="{Binding SelectedClient.DeudaTotal, StringFormat=Deuda Total: {0:C}}" FontSize="20" FontWeight="Bold" Foreground="#F97316" Margin="20,0,0,0"/>
+                    </StackPanel>
+
+                    <DataGrid Grid.Row="1" ItemsSource="{Binding CurrentClientDebts}" 
+                              IsReadOnly="True" AutoGenerateColumns="False" MaxHeight="300"
+                              Background="#2A2A33" RowBackground="#2A2A33" AlternatingRowBackground="#2D2D3A"
+                              BorderThickness="1" BorderBrush="#3A3A44" HeadersVisibility="Column"
+                              Margin="0,0,0,16">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Fecha" Binding="{Binding Fecha}" Width="160"/>
+                            <DataGridTextColumn Header="Factura" Binding="{Binding InvoiceNumber}" Width="*"/>
+                            <DataGridTextColumn Header="Total" Binding="{Binding Total, StringFormat=C}" Width="100"/>
+                            <DataGridTemplateColumn Header="Acciones" Width="100">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Button Content="Pagar"
+                                                Style="{StaticResource PrimaryButton}"
+                                                Padding="10,4"
+                                                Command="{Binding DataContext.PayClientDebtCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                CommandParameter="{Binding}"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <Button Grid.Row="2" Content="Cerrar" Style="{StaticResource RoundedButton}" HorizontalAlignment="Right" Command="{Binding CloseClientAccountCommand}" Padding="20,8"/>
+                </Grid>
+            </Border>
+        </Grid>
 
         <!-- Sale Details Modal -->
         <Grid Background="#B2000000" Visibility="{Binding Metricas.IsSaleDetailsVisible, Converter={StaticResource BooleanToVisibilityConverter}}" Grid.ColumnSpan="2">

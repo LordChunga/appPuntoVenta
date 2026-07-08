@@ -21,8 +21,8 @@ public sealed partial class MetricasViewModel : ObservableObject
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(CancelarVentaCommand))]
+    [NotifyCanExecuteChangedFor(nameof(CancelarVentaCommand))]
     [NotifyCanExecuteChangedFor(nameof(AceptarTransferenciaCommand))]
-    [NotifyCanExecuteChangedFor(nameof(ConfirmarPagoCuentaCorrienteCommand))]
     private Venta? selectedVenta;
 
     [ObservableProperty] private bool isSaleDetailsVisible;
@@ -112,30 +112,6 @@ public sealed partial class MetricasViewModel : ObservableObject
     {
         var target = venta ?? SelectedVenta;
         return target is not null && target.Estado == "Pendiente" && target.MetodoPago == "Transferencia";
-    }
-
-    [RelayCommand(CanExecute = nameof(CanConfirmarPagoCuentaCorriente))]
-    private async Task ConfirmarPagoCuentaCorrienteAsync(Venta? venta)
-    {
-        var target = venta ?? SelectedVenta;
-        if (target is null || !target.ClientId.HasValue) return;
-
-        try
-        {
-            await repository.ConfirmarPagoCuentaCorrienteAsync(target.Id, target.ClientId.Value, target.Total);
-            StatusMessage = $"Pago de cuenta corriente confirmado (Factura: {target.InvoiceNumber}).";
-            await LoadAsync();
-        }
-        catch (Exception ex)
-        {
-            StatusMessage = $"No se pudo confirmar el pago: {ex.Message}";
-        }
-    }
-
-    private bool CanConfirmarPagoCuentaCorriente(Venta? venta)
-    {
-        var target = venta ?? SelectedVenta;
-        return target is not null && target.Estado == "En Deuda" && target.MetodoPago == "Cuenta Corriente";
     }
 
     [RelayCommand]

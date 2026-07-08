@@ -118,6 +118,12 @@ public sealed partial class MainViewModel : ObservableObject
     private bool isClientFormVisible;
 
     [ObservableProperty]
+    private bool isClientAccountVisible;
+
+    [ObservableProperty]
+    private ObservableCollection<Venta> currentClientDebts = [];
+
+    [ObservableProperty]
     private string statusMessage = "Listo.";
 
     /// <summary>Opciones de método de pago disponibles en el POS.</summary>
@@ -626,6 +632,54 @@ public sealed partial class MainViewModel : ObservableObject
         ClearClientForm();
         IsClientFormVisible = false;
         StatusMessage = "Operación cancelada.";
+    }
+
+    [RelayCommand]
+    private async Task OpenClientAccountAsync(Client? client)
+    {
+        var target = client ?? SelectedClient;
+        if (target is null) return;
+
+        SelectedClient = target;
+        CurrentClientDebts.Clear();
+        var debts = await repository.GetPendingDebtsByClientIdAsync(target.Id);
+        foreach (var d in debts)
+        {
+            CurrentClientDebts.Add(d);
+        }
+        IsClientAccountVisible = true;
+    }
+
+    [RelayCommand]
+    private void CloseClientAccount()
+    {
+        IsClientAccountVisible = false;
+        CurrentClientDebts.Clear();
+    }
+
+    [RelayCommand]
+    private async Task PayClientDebtAsync(Venta? venta)
+    {
+        if (venta is null || SelectedClient is null) return;
+
+        try
+        {
+            await repository.ConfirmarPagoCuentaCorrienteAsync(venta.Id, SelectedClient.Id, venta.Total);
+            StatusMessage = $"Deuda cancelada (Factura: {venta.InvoiceNumber}).";
+            
+            CurrentClientDebts.Remove(venta);
+            await SearchClientsAsync();
+            
+            var updatedClient = Clients.FirstOrDefault(c => c.Id == SelectedClient.Id);
+            if (updatedClient != null)
+            {
+                SelectedClient = updatedClient;
+            }
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"Error al cancelar deuda: {ex.Message}";
+        }
     }
 
     [RelayCommand]

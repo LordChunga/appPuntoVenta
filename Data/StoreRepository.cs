@@ -451,6 +451,19 @@ public sealed class StoreRepository(Database database)
     /// <summary>
     /// Retorna la lista de ventas con un resumen de productos por fila.
     /// </summary>
+    public async Task<IReadOnlyList<Venta>> GetPendingDebtsByClientIdAsync(int clientId)
+    {
+        using var connection = database.CreateConnection();
+        var debts = await connection.QueryAsync<Venta>("""
+            SELECT
+                Id, ClientId, InvoiceNumber, Total, Fecha, MetodoPago, Estado
+            FROM Ventas
+            WHERE ClientId = @ClientId AND Estado = 'En Deuda'
+            ORDER BY Fecha DESC;
+            """, new { ClientId = clientId });
+        return debts.ToList();
+    }
+
     public async Task<IReadOnlyList<Venta>> GetVentasAsync(string? searchText = null)
     {
         using var connection = database.CreateConnection();
