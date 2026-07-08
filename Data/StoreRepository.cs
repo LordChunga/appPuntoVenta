@@ -277,7 +277,8 @@ public sealed class StoreRepository(Database database)
         var ventaId = Guid.NewGuid().ToString();
         var items = cartItems.ToList();
         var total = items.Sum(i => i.LineTotal);
-        var estado = metodoPago == "Transferencia" ? "Pendiente" : "Completada";
+        var estado = metodoPago == "Transferencia" ? "Pendiente" : 
+                     metodoPago == "Cuenta Corriente" ? "En Deuda" : "Completada";
 
         // Generate InvoiceNumber
         var todayStr = DateTime.Now.ToString("yyMMdd");
@@ -336,6 +337,14 @@ public sealed class StoreRepository(Database database)
             }, transaction);
         }
 
+        // 4. Actualizar deuda del cliente si es Cuenta Corriente
+        if (metodoPago == "Cuenta Corriente" && clientId.HasValue)
+        {
+            await connection.ExecuteAsync(
+                "UPDATE Clients SET DeudaTotal = DeudaTotal + @Total WHERE Id = @Id;",
+                new { Total = total, Id = clientId.Value }, transaction);
+        }
+
         transaction.Commit();
 
         // Update client purchase stats outside the sale transaction
@@ -387,6 +396,23 @@ public sealed class StoreRepository(Database database)
             new { Id = ventaId });
     }
 
+    public async Task ConfirmarPagoCuentaCorrienteAsync(string ventaId, int clientId, decimal total)
+    {
+        using var connection = database.CreateConnection();
+        connection.Open();
+        using var transaction = connection.BeginTransaction();
+
+        await connection.ExecuteAsync(
+            "UPDATE Ventas SET Estado = 'Completada' WHERE Id = @Id;",
+            new { Id = ventaId }, transaction);
+
+        await connection.ExecuteAsync(
+            "UPDATE Clients SET DeudaTotal = DeudaTotal - @Total WHERE Id = @Id;",
+            new { Total = total, Id = clientId }, transaction);
+
+        transaction.Commit();
+    }
+
     public async Task<IReadOnlyList<VentaDetalle>> GetVentaDetallesAsync(string ventaId)
     {
         using var connection = database.CreateConnection();
@@ -414,6 +440,7 @@ public sealed class StoreRepository(Database database)
                 v.Factura,
                 v.Estado,
                 v.InvoiceNumber,
+                v.ClientId,
                 IFNULL(
                     (SELECT GROUP_CONCAT(d.ProductoNombre || ' x' || d.Cantidad, ', ')
                      FROM VentasDetalle d WHERE d.VentaId = v.Id),

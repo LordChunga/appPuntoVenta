@@ -561,13 +561,31 @@
 
                                         <!-- QR -->
                                         <Button Content="📱 QR"
-                                                Margin="0,0,6,0"
+                                                Margin="0,0,6,6"
                                                 Command="{Binding SetMetodoPagoCommand}"
                                                 CommandParameter="QR / Billetera digital">
                                             <Button.Style>
                                                 <Style TargetType="Button" BasedOn="{StaticResource MetodoPagoBtn}">
                                                     <Style.Triggers>
                                                         <DataTrigger Binding="{Binding MetodoPago}" Value="QR / Billetera digital">
+                                                            <Setter Property="Background" Value="{StaticResource AccentSoftBrush}"/>
+                                                            <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}"/>
+                                                            <Setter Property="Foreground" Value="White"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Button.Style>
+                                        </Button>
+
+                                        <!-- Cuenta Corriente -->
+                                        <Button Content="📒 Cta. Cte."
+                                                Margin="0,0,6,0"
+                                                Command="{Binding SetMetodoPagoCommand}"
+                                                CommandParameter="Cuenta Corriente">
+                                            <Button.Style>
+                                                <Style TargetType="Button" BasedOn="{StaticResource MetodoPagoBtn}">
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding MetodoPago}" Value="Cuenta Corriente">
                                                             <Setter Property="Background" Value="{StaticResource AccentSoftBrush}"/>
                                                             <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}"/>
                                                             <Setter Property="Foreground" Value="White"/>
@@ -1126,6 +1144,9 @@
                                                                     <DataTrigger Binding="{Binding Estado}" Value="Pendiente">
                                                                         <Setter Property="Foreground" Value="#FBBF24"/>
                                                                     </DataTrigger>
+                                                                    <DataTrigger Binding="{Binding Estado}" Value="En Deuda">
+                                                                        <Setter Property="Foreground" Value="#F97316"/>
+                                                                    </DataTrigger>
                                                                     <DataTrigger Binding="{Binding Estado}" Value="Cancelada">
                                                                         <Setter Property="Foreground" Value="#F87171"/>
                                                                     </DataTrigger>
@@ -1149,6 +1170,12 @@
                                                             Foreground="#00E676"
                                                             Margin="0,0,4,0"
                                                             Command="{Binding DataContext.AceptarTransferenciaCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" />
+                                                    <Button Content="&#xE73E;" FontFamily="Segoe MDL2 Assets"
+                                                            ToolTip="Confirmar Pago Cta. Cte."
+                                                            Style="{StaticResource SmallIconButton}"
+                                                            Foreground="#38BDF8"
+                                                            Margin="0,0,4,0"
+                                                            Command="{Binding DataContext.ConfirmarPagoCuentaCorrienteCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" />
                                                     <Button Content="&#xE711;" FontFamily="Segoe MDL2 Assets"
                                                             ToolTip="Cancelar venta"
                                                             Style="{StaticResource DangerButton}"

@@ -122,8 +122,15 @@ public sealed partial class MainViewModel : ObservableObject
     private string statusMessage = "Listo.";
 
     /// <summary>Opciones de método de pago disponibles en el POS.</summary>
-    public IReadOnlyList<string> MetodosPago { get; } =
-        ["Efectivo", "Débito", "Crédito", "Transferencia", "QR / Billetera digital"];
+    public List<string> PaymentMethods { get; } =
+    [
+        "Efectivo",
+        "Tarjeta de Débito",
+        "Tarjeta de Crédito",
+        "Transferencia",
+        "Mercado Pago",
+        "Cuenta Corriente"
+    ];
 
     [ObservableProperty]
     private string metodoPago = "Efectivo";
@@ -498,6 +505,12 @@ public sealed partial class MainViewModel : ObservableObject
     {
         try
         {
+            if (MetodoPago == "Cuenta Corriente" && (SelectedPosClient == null || SelectedPosClient.Id == 0))
+            {
+                StatusMessage = "Debe seleccionar un cliente registrado para vender a cuenta corriente.";
+                return;
+            }
+
             int? finalClientId = SelectedPosClient?.Id > 0 ? SelectedPosClient.Id : null;
             string finalClienteName = SelectedPosClient?.Id > 0 ? SelectedPosClient.Nombre : "Consumidor Final";
 
