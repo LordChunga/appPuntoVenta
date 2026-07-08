@@ -20,9 +20,6 @@ public sealed partial class MetricasViewModel : ObservableObject
     [ObservableProperty] private ObservableCollection<Venta> ventas = [];
 
     [ObservableProperty]
-    [NotifyCanExecuteChangedFor(nameof(CancelarVentaCommand))]
-    [NotifyCanExecuteChangedFor(nameof(AceptarTransferenciaCommand))]
-    [NotifyCanExecuteChangedFor(nameof(EliminarVentaCommand))]
     private Venta? selectedVenta;
 
     [ObservableProperty] private bool isSaleDetailsVisible;
@@ -66,11 +63,17 @@ public sealed partial class MetricasViewModel : ObservableObject
         }
     }
 
-    [RelayCommand(CanExecute = nameof(CanCancelarVenta))]
+    [RelayCommand]
     private async Task CancelarVentaAsync(Venta? venta)
     {
         var target = venta ?? SelectedVenta;
         if (target is null) return;
+
+        if (target.Estado == "Cancelada")
+        {
+            StatusMessage = "Esta venta ya está cancelada.";
+            return;
+        }
 
         try
         {
@@ -84,17 +87,17 @@ public sealed partial class MetricasViewModel : ObservableObject
         }
     }
 
-    private bool CanCancelarVenta(Venta? venta)
-    {
-        var target = venta ?? SelectedVenta;
-        return target is not null && target.Estado != "Cancelada";
-    }
-
-    [RelayCommand(CanExecute = nameof(CanAceptarTransferencia))]
+    [RelayCommand]
     private async Task AceptarTransferenciaAsync(Venta? venta)
     {
         var target = venta ?? SelectedVenta;
         if (target is null) return;
+
+        if (target.Estado != "Pendiente" || target.MetodoPago != "Transferencia")
+        {
+            StatusMessage = "Solo se pueden confirmar transferencias pendientes.";
+            return;
+        }
 
         try
         {
@@ -108,17 +111,17 @@ public sealed partial class MetricasViewModel : ObservableObject
         }
     }
 
-    private bool CanAceptarTransferencia(Venta? venta)
-    {
-        var target = venta ?? SelectedVenta;
-        return target is not null && target.Estado == "Pendiente" && target.MetodoPago == "Transferencia";
-    }
-
-    [RelayCommand(CanExecute = nameof(CanEliminarVenta))]
+    [RelayCommand]
     private async Task EliminarVentaAsync(Venta? venta)
     {
         var target = venta ?? SelectedVenta;
         if (target is null) return;
+
+        if (target.Estado != "Cancelada")
+        {
+            StatusMessage = "Solo se pueden eliminar ventas que ya estén canceladas.";
+            return;
+        }
 
         try
         {
@@ -130,12 +133,6 @@ public sealed partial class MetricasViewModel : ObservableObject
         {
             StatusMessage = $"No se pudo eliminar la venta: {ex.Message}";
         }
-    }
-
-    private bool CanEliminarVenta(Venta? venta)
-    {
-        var target = venta ?? SelectedVenta;
-        return target is not null && target.Estado == "Cancelada";
     }
 
     [RelayCommand]
