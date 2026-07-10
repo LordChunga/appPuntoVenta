@@ -335,6 +335,7 @@
                                     <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="10"/>
                                     <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
                                 </Grid.RowDefinitions>
 
                                 <TextBlock Text="Buscar Producto" FontSize="15" FontWeight="SemiBold"/>
@@ -455,6 +456,71 @@
                                         </StackPanel>
                                     </Button>
                                 </Grid>
+
+                                <!-- Resultados de Búsqueda -->
+                                <DataGrid Grid.Row="5"
+                                          ItemsSource="{Binding SaleProductResults}"
+                                          IsReadOnly="True"
+                                          MaxHeight="200"
+                                          Margin="0,10,0,0"
+                                          AutoGenerateColumns="False"
+                                          HeadersVisibility="Column"
+                                          BorderThickness="1"
+                                          BorderBrush="#2A2A38"
+                                          Background="#1E1E28"
+                                          RowBackground="#1E1E28"
+                                          AlternatingRowBackground="#242430">
+                                    <DataGrid.Style>
+                                        <Style TargetType="DataGrid" BasedOn="{StaticResource {x:Type DataGrid}}">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                            <Style.Triggers>
+                                                <Trigger Property="HasItems" Value="False">
+                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                </Trigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </DataGrid.Style>
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Id" Binding="{Binding Id}" Width="50" />
+                                        <DataGridTextColumn Header="Producto" Binding="{Binding Name}" Width="*" />
+                                        <DataGridTextColumn Header="Código" Binding="{Binding InternalCode}" Width="90" />
+                                        <DataGridTextColumn Header="Barras" Binding="{Binding Barcode}" Width="110" />
+                                        <DataGridTextColumn Header="Stock" Binding="{Binding Stock}" Width="60" />
+                                        <DataGridTemplateColumn Header="" Width="100">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <Button Content="Agregar"
+                                                            Padding="12,6"
+                                                            Command="{Binding DataContext.AddProductToCartCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                            CommandParameter="{Binding}">
+                                                        <Button.Style>
+                                                            <Style TargetType="Button">
+                                                                <Setter Property="Background" Value="#6366F1"/>
+                                                                <Setter Property="Foreground" Value="White"/>
+                                                                <Setter Property="BorderThickness" Value="0"/>
+                                                                <Setter Property="Cursor" Value="Hand"/>
+                                                                <Setter Property="Template">
+                                                                    <Setter.Value>
+                                                                        <ControlTemplate TargetType="Button">
+                                                                            <Border Background="{TemplateBinding Background}" CornerRadius="6" Padding="{TemplateBinding Padding}">
+                                                                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                                            </Border>
+                                                                        </ControlTemplate>
+                                                                    </Setter.Value>
+                                                                </Setter>
+                                                                <Style.Triggers>
+                                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                                        <Setter Property="Background" Value="#818CF8"/>
+                                                                    </Trigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </Button.Style>
+                                                    </Button>
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
+                                    </DataGrid.Columns>
+                                </DataGrid>
                             </Grid>
                         </Border>
 
