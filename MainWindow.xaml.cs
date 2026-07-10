@@ -26,4 +26,13 @@ public partial class MainWindow : Window
         await database.InitializeAsync();
         await viewModel.LoadAsync();
     }
+
+    private void MetricasAcciones_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is System.Windows.Controls.Button button && button.ContextMenu != null)
+        {
+            button.ContextMenu.PlacementTarget = button;
+            button.ContextMenu.IsOpen = true;
+        }
+    }
 }

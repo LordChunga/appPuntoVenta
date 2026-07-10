@@ -1159,21 +1159,11 @@
                                                 <Button Width="28" Height="28" Padding="0"
                                                         Background="Transparent" BorderThickness="0" Cursor="Hand"
                                                         HorizontalAlignment="Center"
+                                                        Click="MetricasAcciones_Click"
                                                         Tag="{Binding DataContext, RelativeSource={RelativeSource AncestorType=DataGrid}}">
                                                     <TextBlock Text="⋮" FontSize="16" FontWeight="Bold"
                                                                Foreground="{StaticResource MutedTextBrush}"
                                                                HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                                    <Button.Triggers>
-                                                        <EventTrigger RoutedEvent="Button.Click">
-                                                            <BeginStoryboard>
-                                                                <Storyboard>
-                                                                    <BooleanAnimationUsingKeyFrames Storyboard.TargetProperty="ContextMenu.IsOpen">
-                                                                        <DiscreteBooleanKeyFrame KeyTime="0" Value="True"/>
-                                                                    </BooleanAnimationUsingKeyFrames>
-                                                                </Storyboard>
-                                                            </BeginStoryboard>
-                                                        </EventTrigger>
-                                                    </Button.Triggers>
                                                     <Button.ContextMenu>
                                                         <ContextMenu Background="#2A2A33" BorderBrush="#3A3A44" BorderThickness="1">
                                                             <ContextMenu.Resources>
