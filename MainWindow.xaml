@@ -1225,12 +1225,15 @@
 
                     <!-- Search Bar -->
                     <Border Grid.Row="1" Style="{StaticResource PanelBorder}" Padding="16" Margin="0,0,0,16">
-                        <TextBox Text="{Binding ClientSearchText, UpdateSourceTrigger=PropertyChanged}"
-                                 FontSize="15">
-                            <TextBox.InputBindings>
-                                <KeyBinding Key="Enter" Command="{Binding SearchClientsCommand}" />
-                            </TextBox.InputBindings>
-                        </TextBox>
+                        <StackPanel>
+                            <TextBlock Text="Buscar cliente por nombre o contacto" Foreground="{StaticResource MutedTextBrush}" Margin="0,0,0,8" />
+                            <TextBox Text="{Binding ClientSearchText, UpdateSourceTrigger=PropertyChanged}"
+                                     FontSize="15">
+                                <TextBox.InputBindings>
+                                    <KeyBinding Key="Enter" Command="{Binding SearchClientsCommand}" />
+                                </TextBox.InputBindings>
+                            </TextBox>
+                        </StackPanel>
                     </Border>
 
                     <!-- Content: Form + DataGrid -->

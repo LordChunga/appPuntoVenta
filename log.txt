@@ -1,0 +1,8 @@
+EliminarVentaAsync ejecutado. Venta es nulo: False
+CancelarVentaAsync ejecutado. Venta es nulo: False
+CancelarVentaAsync ejecutado. Venta es nulo: False
+CancelarVentaAsync ejecutado. Venta es nulo: False
+EliminarVentaAsync ejecutado. Venta es nulo: False
+EliminarVentaAsync ejecutado. Venta es nulo: False
+EliminarVentaAsync ejecutado. Venta es nulo: False
+CancelarVentaAsync ejecutado. Venta es nulo: False
