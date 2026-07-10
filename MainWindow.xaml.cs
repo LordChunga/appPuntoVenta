@@ -32,6 +32,19 @@ public partial class MainWindow : Window
         if (sender is System.Windows.Controls.Button button && button.ContextMenu != null)
         {
             button.ContextMenu.PlacementTarget = button;
+            button.ContextMenu.DataContext = button.DataContext;
+            button.ContextMenu.Tag = button.Tag;
+            
+            // Debugging
+            if (button.Tag == null)
+            {
+                MessageBox.Show("Error: El Tag (ViewModel) es null. El binding AncestorType=DataGrid falló.");
+            }
+            if (button.DataContext == null)
+            {
+                MessageBox.Show("Error: El DataContext (Venta) es null.");
+            }
+
             button.ContextMenu.IsOpen = true;
         }
     }

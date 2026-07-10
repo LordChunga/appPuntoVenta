@@ -1160,7 +1160,7 @@
                                                         Background="Transparent" BorderThickness="0" Cursor="Hand"
                                                         HorizontalAlignment="Center"
                                                         Click="MetricasAcciones_Click"
-                                                        Tag="{Binding DataContext, RelativeSource={RelativeSource AncestorType=DataGrid}}">
+                                                        Tag="{Binding DataContext.Metricas, RelativeSource={RelativeSource AncestorType=Window}}">
                                                     <TextBlock Text="⋮" FontSize="16" FontWeight="Bold"
                                                                Foreground="{StaticResource MutedTextBrush}"
                                                                HorizontalAlignment="Center" VerticalAlignment="Center"/>

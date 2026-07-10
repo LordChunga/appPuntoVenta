@@ -66,6 +66,7 @@ public sealed partial class MetricasViewModel : ObservableObject
     [RelayCommand]
     private async Task CancelarVentaAsync(Venta? venta)
     {
+        System.IO.File.AppendAllText("log.txt", $"CancelarVentaAsync ejecutado. Venta es nulo: {venta == null}\n");
         var target = venta ?? SelectedVenta;
         if (target is null) return;
 
@@ -90,6 +91,7 @@ public sealed partial class MetricasViewModel : ObservableObject
     [RelayCommand]
     private async Task AceptarTransferenciaAsync(Venta? venta)
     {
+        System.IO.File.AppendAllText("log.txt", $"AceptarTransferenciaAsync ejecutado. Venta es nulo: {venta == null}\n");
         var target = venta ?? SelectedVenta;
         if (target is null) return;
 
@@ -114,6 +116,7 @@ public sealed partial class MetricasViewModel : ObservableObject
     [RelayCommand]
     private async Task EliminarVentaAsync(Venta? venta)
     {
+        System.IO.File.AppendAllText("log.txt", $"EliminarVentaAsync ejecutado. Venta es nulo: {venta == null}\n");
         var target = venta ?? SelectedVenta;
         if (target is null) return;
 
