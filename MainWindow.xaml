@@ -1173,15 +1173,15 @@
                                                                 </Style>
                                                             </ContextMenu.Resources>
                                                             <MenuItem Header="Confirmar Transferencia" 
-                                                                      Command="{Binding PlacementTarget.Tag.AceptarTransferenciaCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" 
-                                                                      CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                                                      Command="{Binding Tag.AceptarTransferenciaCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" 
+                                                                      CommandParameter="{Binding}"/>
                                                             <MenuItem Header="Cancelar Venta" 
-                                                                      Command="{Binding PlacementTarget.Tag.CancelarVentaCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" 
-                                                                      CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                                                      Command="{Binding Tag.CancelarVentaCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" 
+                                                                      CommandParameter="{Binding}"/>
                                                             <Separator Background="#3A3A44"/>
                                                             <MenuItem Header="Eliminar" 
-                                                                      Command="{Binding PlacementTarget.Tag.EliminarVentaCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" 
-                                                                      CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}"/>
+                                                                      Command="{Binding Tag.EliminarVentaCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" 
+                                                                      CommandParameter="{Binding}"/>
                                                         </ContextMenu>
                                                     </Button.ContextMenu>
                                                 </Button>
