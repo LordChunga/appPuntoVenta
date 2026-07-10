@@ -1238,41 +1238,8 @@
 
                     <!-- Content: Form + DataGrid -->
                     <Grid Grid.Row="2">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-
-                        <!-- Client Form Panel -->
-                        <Border Grid.Column="0" Width="340" Style="{StaticResource PanelBorder}" Padding="18" Visibility="{Binding IsClientFormVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
-                            <StackPanel>
-                                <TextBlock Text="Datos del cliente" FontSize="18" FontWeight="SemiBold" Margin="0,0,0,16" />
-
-                                <TextBlock Text="Nombre" Foreground="{StaticResource MutedTextBrush}" Margin="0,0,0,6" />
-                                <TextBox Margin="0,0,0,12"
-                                         Text="{Binding ClientNombre, UpdateSourceTrigger=PropertyChanged}" />
-
-                                <TextBlock Text="Teléfono / Contacto" Foreground="{StaticResource MutedTextBrush}" Margin="0,0,0,6" />
-                                <TextBox Margin="0,0,0,20"
-                                         Text="{Binding ClientTelefono, UpdateSourceTrigger=PropertyChanged}" />
-
-                                <UniformGrid Columns="3" Margin="0,0,0,0">
-                                    <Button Content="Cancelar" Margin="0,0,8,0"
-                                            Style="{StaticResource RoundedButton}"
-                                            Command="{Binding CancelClientEditCommand}" />
-                                    <Button Content="Guardar" Margin="0,0,8,0"
-                                            Style="{StaticResource PrimaryButton}"
-                                            Command="{Binding SaveClientCommand}" />
-                                    <Button Content="Eliminar"
-                                            Style="{StaticResource DangerButton}"
-                                            Command="{Binding DeleteClientCommand}" />
-                                </UniformGrid>
-                            </StackPanel>
-                        </Border>
-
                         <!-- Client DataGrid -->
-                        <Border Grid.Column="2" Style="{StaticResource PanelBorder}" Padding="16">
+                        <Border Style="{StaticResource PanelBorder}" Padding="16">
                             <DataGrid ItemsSource="{Binding Clients}"
                                       SelectedItem="{Binding SelectedClient}"
                                       IsReadOnly="True"
@@ -1333,6 +1300,35 @@
                 </Grid>
             </TabItem>
         </TabControl>
+
+        <!-- Client Form Modal -->
+        <Grid Background="#B2000000" Visibility="{Binding IsClientFormVisible, Converter={StaticResource BooleanToVisibilityConverter}}" Grid.ColumnSpan="2">
+            <Border Style="{StaticResource PanelBorder}" Background="#1E1E24" Width="420" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="24">
+                <StackPanel>
+                    <TextBlock Text="Datos del Cliente" FontSize="20" FontWeight="Bold" Margin="0,0,0,20" />
+
+                    <TextBlock Text="Nombre" Foreground="{StaticResource MutedTextBrush}" Margin="0,0,0,6" />
+                    <TextBox Margin="0,0,0,16" Padding="10" FontSize="14"
+                             Text="{Binding ClientNombre, UpdateSourceTrigger=PropertyChanged}" />
+
+                    <TextBlock Text="Teléfono / Contacto" Foreground="{StaticResource MutedTextBrush}" Margin="0,0,0,6" />
+                    <TextBox Margin="0,0,0,24" Padding="10" FontSize="14"
+                             Text="{Binding ClientTelefono, UpdateSourceTrigger=PropertyChanged}" />
+
+                    <UniformGrid Columns="3" Margin="0,0,0,0">
+                        <Button Content="Cancelar" Margin="0,0,8,0"
+                                Style="{StaticResource RoundedButton}"
+                                Command="{Binding CancelClientEditCommand}" />
+                        <Button Content="Eliminar" Margin="0,0,8,0"
+                                Style="{StaticResource DangerButton}"
+                                Command="{Binding DeleteClientCommand}" />
+                        <Button Content="Guardar"
+                                Style="{StaticResource PrimaryButton}"
+                                Command="{Binding SaveClientCommand}" />
+                    </UniformGrid>
+                </StackPanel>
+            </Border>
+        </Grid>
 
         <!-- Client Account Modal -->
         <Grid Background="#B2000000" Visibility="{Binding IsClientAccountVisible, Converter={StaticResource BooleanToVisibilityConverter}}" Grid.ColumnSpan="2">
