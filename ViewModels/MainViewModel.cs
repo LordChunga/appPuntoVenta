@@ -140,6 +140,9 @@ public sealed partial class MainViewModel : ObservableObject
     [ObservableProperty]
     private string metodoPago = "Efectivo";
 
+    [ObservableProperty]
+    private bool isProductDialogOpen;
+
     public decimal Subtotal => Cart.Sum(item => item.LineTotal);
     public decimal Total => Subtotal;
     public int ItemsCount => Cart.Sum(item => item.Quantity);
@@ -240,6 +243,7 @@ public sealed partial class MainViewModel : ObservableObject
             await repository.SaveProductAsync(product);
             StatusMessage = EditingProductId == 0 ? "Producto creado." : "Producto actualizado.";
             ClearProductForm();
+            IsProductDialogOpen = false;
             await SearchProductsAsync();
             await SearchPurchaseProductsAsync();
         }
@@ -283,6 +287,30 @@ public sealed partial class MainViewModel : ObservableObject
     {
         ClearProductForm();
         StatusMessage = "Formulario listo para un nuevo producto.";
+    }
+
+    [RelayCommand]
+    private void OpenProductDialog()
+    {
+        ClearProductForm();
+        IsProductDialogOpen = true;
+    }
+
+    [RelayCommand]
+    private void CloseProductDialog()
+    {
+        IsProductDialogOpen = false;
+    }
+
+    [RelayCommand]
+    private void EditProductDialog()
+    {
+        if (SelectedProduct is null)
+        {
+            StatusMessage = "Seleccioná un producto de la tabla para editar.";
+            return;
+        }
+        IsProductDialogOpen = true;
     }
 
     [RelayCommand(CanExecute = nameof(CanDeleteProduct))]
