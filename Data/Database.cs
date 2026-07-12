@@ -85,6 +85,7 @@ public sealed class Database
         await MigrateRemoveUniqueConstraintsAsync(connection);
         await MigrateAddClientIdToVentasAsync(connection);
         await MigrateAddInvoiceNumberToVentasAsync(connection);
+        await MigrateAddUnitTypeToProductsAsync(connection);
     }
 
     private static async Task MigrateRemoveUniqueConstraintsAsync(IDbConnection connection)
@@ -144,6 +145,19 @@ public sealed class Database
         {
             await connection.ExecuteAsync(
                 "ALTER TABLE Ventas ADD COLUMN InvoiceNumber TEXT NOT NULL DEFAULT '';");
+        }
+    }
+
+    private static async Task MigrateAddUnitTypeToProductsAsync(IDbConnection connection)
+    {
+        var columns = await connection.QueryAsync<dynamic>(
+            "PRAGMA table_info(Products);");
+
+        var hasUnitType = columns.Any(c => ((string)c.name) == "UnitType");
+        if (!hasUnitType)
+        {
+            await connection.ExecuteAsync(
+                "ALTER TABLE Products ADD COLUMN UnitType TEXT NOT NULL DEFAULT 'Unidad';");
         }
     }
 }

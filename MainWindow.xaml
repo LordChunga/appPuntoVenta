@@ -599,6 +599,7 @@
                                                             <!-- Botón - -->
                                                             <Button Width="28" Height="28" Padding="0"
                                                                     Content="−" FontSize="16"
+                                                                    Visibility="{Binding IsUnitType, Converter={StaticResource BoolToVis}}"
                                                                     Command="{Binding DataContext.DecrementCartItemCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
                                                                     CommandParameter="{Binding}">
                                                                 <Button.Style>
@@ -626,13 +627,14 @@
                                                             </Button>
 
                                                             <!-- Cantidad -->
-                                                            <TextBlock Text="{Binding Quantity}" Width="36"
+                                                            <TextBlock Text="{Binding QuantityDisplay}" Width="60"
                                                                        TextAlignment="Center" VerticalAlignment="Center"
                                                                        FontSize="14" FontWeight="SemiBold"/>
 
                                                             <!-- Botón + -->
                                                             <Button Width="28" Height="28" Padding="0"
                                                                     Content="+" FontSize="16"
+                                                                    Visibility="{Binding IsUnitType, Converter={StaticResource BoolToVis}}"
                                                                     Command="{Binding DataContext.IncrementCartItemCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
                                                                     CommandParameter="{Binding}">
                                                                 <Button.Style>
@@ -962,6 +964,44 @@
                             </StackPanel>
                         </ScrollViewer>
                     </Border>
+
+                    <!-- Modal overlay for weight/quantity -->
+                    <Grid Grid.ColumnSpan="3" Grid.RowSpan="3"
+                          Visibility="{Binding IsWeightDialogOpen, Converter={StaticResource BoolToVis}}">
+                        <Border Background="#CC000000">
+                            <Border.InputBindings>
+                                <MouseBinding MouseAction="LeftClick" Command="{Binding CloseWeightDialogCommand}" />
+                            </Border.InputBindings>
+                        </Border>
+
+                        <Border Background="{StaticResource PanelBackground}"
+                                CornerRadius="12"
+                                Padding="28"
+                                Width="350"
+                                VerticalAlignment="Center"
+                                HorizontalAlignment="Center"
+                                BorderBrush="#3A3A44"
+                                BorderThickness="1">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+
+                                <TextBlock Text="Ingrese la cantidad" FontSize="20" FontWeight="SemiBold" Margin="0,0,0,16" />
+                                
+                                <TextBlock Grid.Row="1" Text="{Binding WeightDialogUnitLabel}" Foreground="{StaticResource MutedTextBrush}" Margin="0,0,0,6" />
+                                <TextBox Grid.Row="2" Margin="0,0,0,20" Text="{Binding WeightDialogQuantity, UpdateSourceTrigger=PropertyChanged}" FontSize="18" />
+
+                                <UniformGrid Grid.Row="3" Columns="2">
+                                    <Button Content="Cancelar" Margin="0,0,9,0" Style="{StaticResource RoundedButton}" Command="{Binding CloseWeightDialogCommand}" />
+                                    <Button Content="Confirmar" Style="{StaticResource PrimaryButton}" Command="{Binding ConfirmWeightDialogCommand}" />
+                                </UniformGrid>
+                            </Grid>
+                        </Border>
+                    </Grid>
                 </Grid>
             </TabItem>
 
@@ -1009,6 +1049,7 @@
                                 <DataGridTextColumn Header="Barras" Binding="{Binding Barcode}" Width="150" />
                                 <DataGridTextColumn Header="Nombre" Binding="{Binding Name}" Width="*" />
                                 <DataGridTextColumn Header="Categoria" Binding="{Binding CategoryName}" Width="150" />
+                                <DataGridTextColumn Header="Unidad" Binding="{Binding UnitType}" Width="80" />
                                 <DataGridTextColumn Header="Stock" Binding="{Binding Stock}" Width="90" />
                                 <DataGridTextColumn Header="Precio" Binding="{Binding SalePrice, StringFormat=C}" Width="110" />
                             </DataGrid.Columns>
@@ -1051,6 +1092,8 @@
                                     <RowDefinition Height="Auto" />
                                     <RowDefinition Height="Auto" />
                                     <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
                                 </Grid.RowDefinitions>
 
                                 <!-- Header with close button -->
@@ -1074,8 +1117,12 @@
                                 <TextBox Grid.Row="8" Margin="0,0,0,10" Text="{Binding ProductSalePrice, UpdateSourceTrigger=PropertyChanged}" />
                                 <TextBlock Grid.Row="9" Text="Stock actual" Foreground="{StaticResource MutedTextBrush}" Margin="0,0,0,6" />
                                 <TextBox Grid.Row="10" Margin="0,0,0,10" Text="{Binding ProductStock, UpdateSourceTrigger=PropertyChanged}" />
-                                <TextBlock Grid.Row="11" Text="Categoria" Foreground="{StaticResource MutedTextBrush}" Margin="0,0,0,6" />
+                                <TextBlock Grid.Row="11" Text="Tipo de unidad" Foreground="{StaticResource MutedTextBrush}" Margin="0,0,0,6" />
                                 <ComboBox Grid.Row="12" Margin="0,0,0,10"
+                                          ItemsSource="{Binding UnitTypes}"
+                                          SelectedItem="{Binding ProductUnitType}" />
+                                <TextBlock Grid.Row="13" Text="Categoria" Foreground="{StaticResource MutedTextBrush}" Margin="0,0,0,6" />
+                                <ComboBox Grid.Row="14" Margin="0,0,0,10"
                                           ItemsSource="{Binding Categories}"
                                           SelectedItem="{Binding SelectedCategory}"
                                           TextSearch.TextPath="Name">
@@ -1086,7 +1133,7 @@
                                     </ComboBox.ItemTemplate>
                                 </ComboBox>
 
-                                <Grid Grid.Row="13" VerticalAlignment="Top" Margin="0,0,0,16">
+                                <Grid Grid.Row="15" VerticalAlignment="Top" Margin="0,0,0,16">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*" />
                                         <ColumnDefinition Width="8" />
@@ -1099,7 +1146,7 @@
                                     <Button Grid.Column="2" Content="+ Categoria" Style="{StaticResource RoundedButton}" Command="{Binding CreateCategoryCommand}" />
                                 </Grid>
 
-                                <UniformGrid Grid.Row="14" Columns="3" Margin="0,30,0,0">
+                                <UniformGrid Grid.Row="16" Columns="3" Margin="0,30,0,0">
                                     <Button Content="Nuevo" Margin="0,0,9,0" Style="{StaticResource RoundedButton}" Command="{Binding NewProductCommand}" />
                                     <Button Content="Guardar" Margin="0,0,9,0" Style="{StaticResource PrimaryButton}" Command="{Binding SaveProductCommand}" />
                                     <Button Content="Eliminar" Style="{StaticResource RoundedButton}" Command="{Binding DeleteProductCommand}" />

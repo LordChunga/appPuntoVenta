@@ -6,13 +6,18 @@ public sealed partial class CartItem : ObservableObject
 {
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(LineTotal))]
-    private int quantity;
+    [NotifyPropertyChangedFor(nameof(QuantityDisplay))]
+    private decimal quantity;
 
-    partial void OnQuantityChanged(int value)
+    partial void OnQuantityChanged(decimal value)
     {
-        if (value < 1)
+        if (UnitType == "Unidad" && value < 1)
         {
             Quantity = 1;
+        }
+        else if (value <= 0)
+        {
+            Quantity = 0.001m;
         }
     }
 
@@ -20,7 +25,18 @@ public sealed partial class CartItem : ObservableObject
     public string Code { get; init; } = string.Empty;
     public string Name { get; init; } = string.Empty;
     public decimal UnitPrice { get; init; }
+    public string UnitType { get; init; } = "Unidad";
     /// <summary>Stock disponible al momento de agregar el producto al carrito (usado para validación).</summary>
     public int StockAvailable { get; init; }
     public decimal LineTotal => UnitPrice * Quantity;
+
+    public bool IsUnitType => UnitType == "Unidad";
+
+    public string QuantityDisplay => UnitType switch
+    {
+        "Kilo" => $"{Quantity:F3} kg",
+        "Gramo" => $"{Quantity:F0} g",
+        "Litro" => $"{Quantity:F3} L",
+        _ => $"{(int)Quantity}"
+    };
 }

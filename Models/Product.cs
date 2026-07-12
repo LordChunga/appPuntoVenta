@@ -10,4 +10,5 @@ public sealed class Product
     public int Stock { get; set; }
     public int CategoryId { get; set; }
     public string CategoryName { get; set; } = string.Empty;
+    public string UnitType { get; set; } = "Unidad";
 }

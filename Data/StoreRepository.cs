@@ -48,7 +48,8 @@ public sealed class StoreRepository(Database database)
                 p.SalePrice,
                 p.Stock,
                 p.CategoryId,
-                c.Name AS CategoryName
+                c.Name AS CategoryName,
+                p.UnitType
             FROM Products p
             INNER JOIN Categories c ON c.Id = p.CategoryId
             WHERE @Search = ''
@@ -74,7 +75,8 @@ public sealed class StoreRepository(Database database)
                 p.SalePrice,
                 p.Stock,
                 p.CategoryId,
-                c.Name AS CategoryName
+                c.Name AS CategoryName,
+                p.UnitType
             FROM Products p
             INNER JOIN Categories c ON c.Id = p.CategoryId
             WHERE CAST(p.Id AS TEXT) = @Code
@@ -90,8 +92,8 @@ public sealed class StoreRepository(Database database)
         if (product.Id == 0)
         {
             await connection.ExecuteAsync("""
-                INSERT INTO Products (Barcode, InternalCode, Name, SalePrice, Stock, CategoryId)
-                VALUES (@Barcode, @InternalCode, @Name, @SalePrice, @Stock, @CategoryId);
+                INSERT INTO Products (Barcode, InternalCode, Name, SalePrice, Stock, CategoryId, UnitType)
+                VALUES (@Barcode, @InternalCode, @Name, @SalePrice, @Stock, @CategoryId, @UnitType);
                 """, product);
             return;
         }
@@ -103,7 +105,8 @@ public sealed class StoreRepository(Database database)
                 Name = @Name,
                 SalePrice = @SalePrice,
                 Stock = @Stock,
-                CategoryId = @CategoryId
+                CategoryId = @CategoryId,
+                UnitType = @UnitType
             WHERE Id = @Id;
             """, product);
     }

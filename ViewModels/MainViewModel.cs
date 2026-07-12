@@ -143,9 +143,31 @@ public sealed partial class MainViewModel : ObservableObject
     [ObservableProperty]
     private bool isProductDialogOpen;
 
+    // ── Unit Type ─────────────────────────────────────────────
+
+    public List<string> UnitTypes { get; } = ["Unidad", "Kilo", "Gramo", "Litro"];
+
+    [ObservableProperty]
+    private string productUnitType = "Unidad";
+
+    // ── Weight Dialog (POS) ──────────────────────────────────
+
+    [ObservableProperty]
+    private bool isWeightDialogOpen;
+
+    [ObservableProperty]
+    private Product? weightDialogProduct;
+
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(ConfirmWeightDialogCommand))]
+    private string weightDialogQuantity = string.Empty;
+
+    [ObservableProperty]
+    private string weightDialogUnitLabel = string.Empty;
+
     public decimal Subtotal => Cart.Sum(item => item.LineTotal);
     public decimal Total => Subtotal;
-    public int ItemsCount => Cart.Sum(item => item.Quantity);
+    public int ItemsCount => Cart.Count;
 
     /// <summary>ViewModel de la pestaña Métricas, accesible desde la vista principal.</summary>
     public MetricasViewModel Metricas { get; }
@@ -171,6 +193,7 @@ public sealed partial class MainViewModel : ObservableObject
         ProductSalePrice = value.SalePrice;
         ProductStock = value.Stock;
         SelectedCategory = Categories.FirstOrDefault(category => category.Id == value.CategoryId);
+        ProductUnitType = value.UnitType;
     }
 
     partial void OnInventorySearchTextChanged(string value)
@@ -235,7 +258,8 @@ public sealed partial class MainViewModel : ObservableObject
             Name = ProductName.Trim(),
             SalePrice = ProductSalePrice,
             Stock = ProductStock,
-            CategoryId = SelectedCategory.Id
+            CategoryId = SelectedCategory.Id,
+            UnitType = ProductUnitType
         };
 
         try
@@ -448,7 +472,23 @@ public sealed partial class MainViewModel : ObservableObject
             return;
         }
 
-        // Bug 3: Validación de stock
+        // For non-unit products, open the weight dialog
+        if (product.UnitType != "Unidad")
+        {
+            WeightDialogProduct = product;
+            WeightDialogQuantity = string.Empty;
+            WeightDialogUnitLabel = product.UnitType switch
+            {
+                "Kilo" => "Cantidad en kilos (kg)",
+                "Gramo" => "Cantidad en gramos (g)",
+                "Litro" => "Cantidad en litros (L)",
+                _ => "Cantidad"
+            };
+            IsWeightDialogOpen = true;
+            return;
+        }
+
+        // Unit products: normal flow
         var cartItem = Cart.FirstOrDefault(item => item.ProductId == product.Id);
         if (cartItem is null)
         {
@@ -464,6 +504,7 @@ public sealed partial class MainViewModel : ObservableObject
                 Code = string.IsNullOrWhiteSpace(product.Barcode) ? product.InternalCode : product.Barcode,
                 Name = product.Name,
                 UnitPrice = product.SalePrice,
+                UnitType = product.UnitType,
                 Quantity = 1,
                 StockAvailable = product.Stock
             });
@@ -484,6 +525,55 @@ public sealed partial class MainViewModel : ObservableObject
         ConfirmSaleCommand.NotifyCanExecuteChanged();
     }
 
+    [RelayCommand(CanExecute = nameof(CanConfirmWeightDialog))]
+    private void ConfirmWeightDialog()
+    {
+        if (WeightDialogProduct is null)
+        {
+            return;
+        }
+
+        if (!decimal.TryParse(WeightDialogQuantity.Replace(',', '.'),
+                System.Globalization.NumberStyles.Any,
+                System.Globalization.CultureInfo.InvariantCulture,
+                out var qty) || qty <= 0)
+        {
+            StatusMessage = "Ingresá una cantidad válida mayor a 0.";
+            return;
+        }
+
+        Cart.Add(new CartItem
+        {
+            ProductId = WeightDialogProduct.Id,
+            Code = string.IsNullOrWhiteSpace(WeightDialogProduct.Barcode)
+                ? WeightDialogProduct.InternalCode
+                : WeightDialogProduct.Barcode,
+            Name = WeightDialogProduct.Name,
+            UnitPrice = WeightDialogProduct.SalePrice,
+            UnitType = WeightDialogProduct.UnitType,
+            Quantity = qty,
+            StockAvailable = WeightDialogProduct.Stock
+        });
+
+        StatusMessage = $"{WeightDialogProduct.Name} agregado al carrito.";
+        IsWeightDialogOpen = false;
+        WeightDialogProduct = null;
+        WeightDialogQuantity = string.Empty;
+        ConfirmSaleCommand.NotifyCanExecuteChanged();
+        SaleSearchText = string.Empty;
+        SaleProductResults = new ObservableCollection<Product>();
+    }
+
+    private bool CanConfirmWeightDialog() => !string.IsNullOrWhiteSpace(WeightDialogQuantity);
+
+    [RelayCommand]
+    private void CloseWeightDialog()
+    {
+        IsWeightDialogOpen = false;
+        WeightDialogProduct = null;
+        WeightDialogQuantity = string.Empty;
+    }
+
     [RelayCommand]
     private void RemoveCartItem(CartItem? item)
     {
@@ -500,12 +590,11 @@ public sealed partial class MainViewModel : ObservableObject
     [RelayCommand]
     private void IncrementCartItem(CartItem? item)
     {
-        if (item is null)
+        if (item is null || !item.IsUnitType)
         {
             return;
         }
 
-        // Bug 3: Validación de stock al incrementar desde el carrito
         if (item.Quantity >= item.StockAvailable)
         {
             StatusMessage = $"Stock insuficiente: máximo {item.StockAvailable} unidad(es) de '{item.Name}'.";
@@ -521,6 +610,13 @@ public sealed partial class MainViewModel : ObservableObject
     {
         if (item is null)
         {
+            return;
+        }
+
+        // For weight items, just remove entirely
+        if (!item.IsUnitType)
+        {
+            RemoveCartItem(item);
             return;
         }
 
@@ -774,6 +870,7 @@ public sealed partial class MainViewModel : ObservableObject
         ProductStock = 0;
         SelectedCategory = Categories.FirstOrDefault();
         SelectedProduct = null;
+        ProductUnitType = "Unidad";
     }
 
     private void RefreshTotals()
