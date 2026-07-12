@@ -268,11 +268,36 @@
                 <StackPanel Grid.Row="1">
                     <TextBlock Text="OPERACION" Foreground="{StaticResource DimTextBrush}" FontSize="11" FontWeight="SemiBold" Margin="0,0,0,8" />
                     <ListBox SelectedIndex="{Binding ActiveTabIndex, Mode=TwoWay}">
-                        <ListBoxItem Content="Punto de Venta" />
-                        <ListBoxItem Content="Productos" />
-                        <ListBoxItem Content="Compras" />
-                        <ListBoxItem Content="Métricas" />
-                        <ListBoxItem Content="Clientes" />
+                        <ListBoxItem>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE7F4;" FontFamily="Segoe MDL2 Assets" FontSize="16" Margin="0,0,10,0" VerticalAlignment="Center" />
+                                <TextBlock Text="Punto de Venta" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </ListBoxItem>
+                        <ListBoxItem>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE719;" FontFamily="Segoe MDL2 Assets" FontSize="16" Margin="0,0,10,0" VerticalAlignment="Center" />
+                                <TextBlock Text="Productos" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </ListBoxItem>
+                        <ListBoxItem>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE7BF;" FontFamily="Segoe MDL2 Assets" FontSize="16" Margin="0,0,10,0" VerticalAlignment="Center" />
+                                <TextBlock Text="Compras" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </ListBoxItem>
+                        <ListBoxItem>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE9D9;" FontFamily="Segoe MDL2 Assets" FontSize="16" Margin="0,0,10,0" VerticalAlignment="Center" />
+                                <TextBlock Text="Métricas" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </ListBoxItem>
+                        <ListBoxItem>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE77B;" FontFamily="Segoe MDL2 Assets" FontSize="16" Margin="0,0,10,0" VerticalAlignment="Center" />
+                                <TextBlock Text="Clientes" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </ListBoxItem>
                     </ListBox>
                 </StackPanel>
 
