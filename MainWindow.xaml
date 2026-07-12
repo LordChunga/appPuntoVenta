@@ -1043,8 +1043,33 @@
                     </Grid>
 
                     <Border Grid.Row="1" Style="{StaticResource PanelBorder}" Padding="16">
-                        <DataGrid ItemsSource="{Binding Products}" SelectedItem="{Binding SelectedProduct}" IsReadOnly="True">
-                            <DataGrid.Columns>
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="16" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+
+                            <!-- Barra de busqueda de productos -->
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="12" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock Text="Buscar por id, nombre o codigo" Foreground="{StaticResource MutedTextBrush}" Margin="0,0,0,8" />
+                                    <TextBox Text="{Binding ProductSearchText, UpdateSourceTrigger=PropertyChanged}" />
+                                </StackPanel>
+                                <Button Grid.Column="2"
+                                        Content="Buscar"
+                                        Style="{StaticResource PrimaryButton}"
+                                        VerticalAlignment="Bottom"
+                                        Command="{Binding SearchProductsCommand}" />
+                            </Grid>
+
+                            <DataGrid Grid.Row="2" ItemsSource="{Binding Products}" SelectedItem="{Binding SelectedProduct}" IsReadOnly="True">
+                                <DataGrid.Columns>
                                 <DataGridTextColumn Header="Codigo" Binding="{Binding InternalCode}" Width="130" />
                                 <DataGridTextColumn Header="Barras" Binding="{Binding Barcode}" Width="150" />
                                 <DataGridTextColumn Header="Nombre" Binding="{Binding Name}" Width="*" />
@@ -1054,6 +1079,7 @@
                                 <DataGridTextColumn Header="Precio" Binding="{Binding SalePrice, StringFormat=C}" Width="110" />
                             </DataGrid.Columns>
                         </DataGrid>
+                        </Grid>
                     </Border>
 
                     <!-- Modal overlay for product form -->
@@ -1164,58 +1190,7 @@
                 </Grid>
             </TabItem>
 
-            <TabItem Header="Inventario">
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="20" />
-                        <RowDefinition Height="*" />
-                    </Grid.RowDefinitions>
 
-                    <StackPanel>
-                        <TextBlock Text="Inventario" FontSize="32" FontWeight="Bold" />
-                        <TextBlock Text="Consulta de stock y precios." Foreground="{StaticResource MutedTextBrush}" Margin="0,6,0,0" />
-                    </StackPanel>
-
-                    <Border Grid.Row="2" Style="{StaticResource PanelBorder}" Padding="16">
-                        <Grid>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="16" />
-                                <RowDefinition Height="*" />
-                            </Grid.RowDefinitions>
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="12" />
-                                    <ColumnDefinition Width="Auto" />
-                                </Grid.ColumnDefinitions>
-                                <StackPanel>
-                                    <TextBlock Text="Buscar por id, nombre o codigo" Foreground="{StaticResource MutedTextBrush}" Margin="0,0,0,8" />
-                                    <TextBox Text="{Binding InventorySearchText, UpdateSourceTrigger=PropertyChanged}" />
-                                </StackPanel>
-                                <Button Grid.Column="2"
-                                        Content="Buscar"
-                                        Style="{StaticResource PrimaryButton}"
-                                        VerticalAlignment="Bottom"
-                                        Command="{Binding SearchProductsCommand}" />
-                            </Grid>
-                            <!-- Bug 4: ScrollViewer.VerticalScrollBarVisibility=Auto en Inventario -->
-                            <DataGrid Grid.Row="2" ItemsSource="{Binding Products}" IsReadOnly="True"
-                                      ScrollViewer.VerticalScrollBarVisibility="Auto"
-                                      ScrollViewer.CanContentScroll="True">
-                                <DataGrid.Columns>
-                                    <DataGridTextColumn Header="Codigo" Binding="{Binding InternalCode}" Width="160" />
-                                    <DataGridTextColumn Header="Nombre" Binding="{Binding Name}" Width="*" />
-                                    <DataGridTextColumn Header="Categoria" Binding="{Binding CategoryName}" Width="180" />
-                                    <DataGridTextColumn Header="Stock actual" Binding="{Binding Stock}" Width="130" />
-                                    <DataGridTextColumn Header="Precio" Binding="{Binding SalePrice, StringFormat=C}" Width="130" />
-                                </DataGrid.Columns>
-                            </DataGrid>
-                        </Grid>
-                    </Border>
-                </Grid>
-            </TabItem>
 
             <TabItem Header="Compras">
                 <Grid>

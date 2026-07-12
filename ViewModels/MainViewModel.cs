@@ -65,7 +65,7 @@ public sealed partial class MainViewModel : ObservableObject
     private Product? selectedProduct;
 
     [ObservableProperty]
-    private string inventorySearchText = string.Empty;
+    private string productSearchText = string.Empty;
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(AddSaleSearchToCartCommand))]
@@ -214,7 +214,7 @@ public sealed partial class MainViewModel : ObservableObject
         ProductUnitType = value.UnitType;
     }
 
-    partial void OnInventorySearchTextChanged(string value)
+    partial void OnProductSearchTextChanged(string value)
     {
         _ = SearchProductsAsync();
     }
@@ -410,7 +410,7 @@ public sealed partial class MainViewModel : ObservableObject
     [RelayCommand]
     private async Task SearchProductsAsync()
     {
-        var rows = await repository.SearchProductsAsync(InventorySearchText);
+        var rows = await repository.SearchProductsAsync(ProductSearchText);
         Products = new ObservableCollection<Product>(rows);
 
         if (PurchaseProduct is not null)
