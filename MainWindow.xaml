@@ -270,7 +270,6 @@
                     <ListBox SelectedIndex="{Binding ActiveTabIndex, Mode=TwoWay}">
                         <ListBoxItem Content="Punto de Venta" />
                         <ListBoxItem Content="Productos" />
-                        <ListBoxItem Content="Inventario" />
                         <ListBoxItem Content="Compras" />
                         <ListBoxItem Content="Métricas" />
                         <ListBoxItem Content="Clientes" />
