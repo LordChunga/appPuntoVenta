@@ -148,7 +148,25 @@ public sealed partial class MainViewModel : ObservableObject
     public List<string> UnitTypes { get; } = ["Unidad", "Kilo", "Gramo", "Litro"];
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(PriceLabel))]
+    [NotifyPropertyChangedFor(nameof(StockLabel))]
     private string productUnitType = "Unidad";
+
+    public string PriceLabel => ProductUnitType switch
+    {
+        "Kilo" => "Precio de venta por kilo",
+        "Gramo" => "Precio de venta por 100 gramos",
+        "Litro" => "Precio de venta por litro",
+        _ => "Precio de venta"
+    };
+
+    public string StockLabel => ProductUnitType switch
+    {
+        "Kilo" => "Stock actual (en kilos)",
+        "Gramo" => "Stock actual (en gramos)",
+        "Litro" => "Stock actual (en litros)",
+        _ => "Stock actual (unidades)"
+    };
 
     // ── Weight Dialog (POS) ──────────────────────────────────
 

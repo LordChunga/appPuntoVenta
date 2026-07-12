@@ -28,7 +28,7 @@ public sealed partial class CartItem : ObservableObject
     public string UnitType { get; init; } = "Unidad";
     /// <summary>Stock disponible al momento de agregar el producto al carrito (usado para validación).</summary>
     public int StockAvailable { get; init; }
-    public decimal LineTotal => UnitPrice * Quantity;
+    public decimal LineTotal => UnitType == "Gramo" ? UnitPrice * (Quantity / 100m) : UnitPrice * Quantity;
 
     public bool IsUnitType => UnitType == "Unidad";
 

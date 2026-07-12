@@ -1113,14 +1113,18 @@
                                 <TextBox Grid.Row="4" Margin="0,0,0,10" Text="{Binding ProductInternalCode, UpdateSourceTrigger=PropertyChanged}" />
                                 <TextBlock Grid.Row="5" Text="Nombre" Foreground="{StaticResource MutedTextBrush}" Margin="0,0,0,6" />
                                 <TextBox Grid.Row="6" Margin="0,0,0,10" Text="{Binding ProductName, UpdateSourceTrigger=PropertyChanged}" />
-                                <TextBlock Grid.Row="7" Text="Precio de venta" Foreground="{StaticResource MutedTextBrush}" Margin="0,0,0,6" />
-                                <TextBox Grid.Row="8" Margin="0,0,0,10" Text="{Binding ProductSalePrice, UpdateSourceTrigger=PropertyChanged}" />
-                                <TextBlock Grid.Row="9" Text="Stock actual" Foreground="{StaticResource MutedTextBrush}" Margin="0,0,0,6" />
-                                <TextBox Grid.Row="10" Margin="0,0,0,10" Text="{Binding ProductStock, UpdateSourceTrigger=PropertyChanged}" />
-                                <TextBlock Grid.Row="11" Text="Tipo de unidad" Foreground="{StaticResource MutedTextBrush}" Margin="0,0,0,6" />
-                                <ComboBox Grid.Row="12" Margin="0,0,0,10"
+                                
+                                <TextBlock Grid.Row="7" Text="Tipo de unidad" Foreground="{StaticResource MutedTextBrush}" Margin="0,0,0,6" />
+                                <ComboBox Grid.Row="8" Margin="0,0,0,10"
                                           ItemsSource="{Binding UnitTypes}"
                                           SelectedItem="{Binding ProductUnitType}" />
+                                          
+                                <TextBlock Grid.Row="9" Text="{Binding PriceLabel}" Foreground="{StaticResource MutedTextBrush}" Margin="0,0,0,6" />
+                                <TextBox Grid.Row="10" Margin="0,0,0,10" Text="{Binding ProductSalePrice, UpdateSourceTrigger=PropertyChanged}" />
+                                
+                                <TextBlock Grid.Row="11" Text="{Binding StockLabel}" Foreground="{StaticResource MutedTextBrush}" Margin="0,0,0,6" />
+                                <TextBox Grid.Row="12" Margin="0,0,0,10" Text="{Binding ProductStock, UpdateSourceTrigger=PropertyChanged}" />
+                                
                                 <TextBlock Grid.Row="13" Text="Categoria" Foreground="{StaticResource MutedTextBrush}" Margin="0,0,0,6" />
                                 <ComboBox Grid.Row="14" Margin="0,0,0,10"
                                           ItemsSource="{Binding Categories}"
