@@ -1085,7 +1085,7 @@
 
                                 <TextBlock Text="Monto Inicial ($)" Foreground="{StaticResource MutedTextBrush}" Margin="0,0,0,5" />
                                 <TextBox Text="{Binding CajaInicialInput, UpdateSourceTrigger=PropertyChanged}"
-                                         Style="{StaticResource FormTextBox}"
+                                         FontSize="16" Padding="6"
                                          Margin="0,0,0,24" />
 
                                 <Button Content="Guardar Caja"
