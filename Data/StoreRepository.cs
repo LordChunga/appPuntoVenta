@@ -301,21 +301,16 @@ public sealed class StoreRepository(Database database)
             "SELECT COUNT(*) FROM Ventas WHERE date(Fecha) = date('now', 'localtime');", transaction);
         var invoiceNumber = $"{todayStr}-{(countToday + 1):D3}";
 
-        // 1. Descontar stock con validación
+        // 1. Descontar stock permitiendo negativos y omitiendo productos manuales (Id == 0)
         foreach (var item in items)
         {
-            var updated = await connection.ExecuteAsync("""
+            if (item.ProductId == 0) continue;
+
+            await connection.ExecuteAsync("""
                 UPDATE Products
                 SET Stock = Stock - @Quantity
-                WHERE Id = @ProductId
-                  AND Stock >= @Quantity;
+                WHERE Id = @ProductId;
                 """, new { item.ProductId, item.Quantity }, transaction);
-
-            if (updated == 0)
-            {
-                transaction.Rollback();
-                throw new InvalidOperationException($"Stock insuficiente para {item.Name}.");
-            }
         }
 
         // 2. Insertar cabecera de venta
