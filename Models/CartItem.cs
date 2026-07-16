@@ -31,6 +31,7 @@ public sealed partial class CartItem : ObservableObject
     public decimal LineTotal => UnitType == "Gramo" ? UnitPrice * (Quantity / 100m) : UnitPrice * Quantity;
 
     public bool IsUnitType => UnitType == "Unidad";
+    public bool IsOutOfStock => StockAvailable <= 0;
 
     public string QuantityDisplay => UnitType switch
     {

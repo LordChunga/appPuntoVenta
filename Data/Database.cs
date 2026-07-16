@@ -41,7 +41,7 @@ public sealed class Database
                 InternalCode TEXT NOT NULL DEFAULT '' COLLATE NOCASE,
                 Name TEXT NOT NULL,
                 SalePrice NUMERIC NOT NULL CHECK (SalePrice >= 0),
-                Stock INTEGER NOT NULL CHECK (Stock >= 0),
+                Stock INTEGER NOT NULL,
                 CategoryId INTEGER NOT NULL,
                 FOREIGN KEY (CategoryId) REFERENCES Categories(Id)
             );
@@ -86,6 +86,7 @@ public sealed class Database
         await MigrateAddClientIdToVentasAsync(connection);
         await MigrateAddInvoiceNumberToVentasAsync(connection);
         await MigrateAddUnitTypeToProductsAsync(connection);
+        await MigrateRemoveStockCheckAsync(connection);
     }
 
     private static async Task MigrateRemoveUniqueConstraintsAsync(IDbConnection connection)
@@ -106,7 +107,7 @@ public sealed class Database
                 InternalCode TEXT NOT NULL DEFAULT '' COLLATE NOCASE,
                 Name TEXT NOT NULL,
                 SalePrice NUMERIC NOT NULL CHECK (SalePrice >= 0),
-                Stock INTEGER NOT NULL CHECK (Stock >= 0),
+                Stock INTEGER NOT NULL,
                 CategoryId INTEGER NOT NULL,
                 FOREIGN KEY (CategoryId) REFERENCES Categories(Id)
             );
@@ -159,5 +160,38 @@ public sealed class Database
             await connection.ExecuteAsync(
                 "ALTER TABLE Products ADD COLUMN UnitType TEXT NOT NULL DEFAULT 'Unidad';");
         }
+    }
+
+    private static async Task MigrateRemoveStockCheckAsync(IDbConnection connection)
+    {
+        var tableInfo = await connection.QueryAsync<dynamic>(
+            "SELECT sql FROM sqlite_master WHERE type='table' AND name='Products';");
+
+        var sql = tableInfo.FirstOrDefault()?.sql as string;
+        if (sql is null || !sql.Contains("Stock >= 0", StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        await connection.ExecuteAsync("""
+            CREATE TABLE IF NOT EXISTS Products_new_2 (
+                Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                Barcode TEXT NOT NULL DEFAULT '' COLLATE NOCASE,
+                InternalCode TEXT NOT NULL DEFAULT '' COLLATE NOCASE,
+                Name TEXT NOT NULL,
+                SalePrice NUMERIC NOT NULL CHECK (SalePrice >= 0),
+                Stock INTEGER NOT NULL,
+                CategoryId INTEGER NOT NULL,
+                UnitType TEXT NOT NULL DEFAULT 'Unidad',
+                FOREIGN KEY (CategoryId) REFERENCES Categories(Id)
+            );
+
+            INSERT INTO Products_new_2 (Id, Barcode, InternalCode, Name, SalePrice, Stock, CategoryId, UnitType)
+            SELECT Id, Barcode, InternalCode, Name, SalePrice, Stock, CategoryId, UnitType FROM Products;
+
+            DROP TABLE Products;
+
+            ALTER TABLE Products_new_2 RENAME TO Products;
+            """);
     }
 }

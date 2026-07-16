@@ -598,10 +598,30 @@
                                                             <StackPanel Orientation="Horizontal" Margin="0,3,0,0">
                                                                 <TextBlock Text="{Binding Code}" FontSize="11"
                                                                            Foreground="{StaticResource MutedTextBrush}"/>
-                                                                <Border CornerRadius="4" Background="#2A3A2A" Margin="8,0,0,0" Padding="5,1">
-                                                                    <TextBlock FontSize="10" FontWeight="SemiBold" Foreground="#4ADE80">
+                                                                <Border CornerRadius="4" Margin="8,0,0,0" Padding="5,1">
+                                                                    <Border.Style>
+                                                                        <Style TargetType="Border">
+                                                                            <Setter Property="Background" Value="#2A3A2A" />
+                                                                            <Style.Triggers>
+                                                                                <DataTrigger Binding="{Binding IsOutOfStock}" Value="True">
+                                                                                    <Setter Property="Background" Value="#3A1A1A" />
+                                                                                </DataTrigger>
+                                                                            </Style.Triggers>
+                                                                        </Style>
+                                                                    </Border.Style>
+                                                                    <TextBlock FontSize="10" FontWeight="SemiBold">
+                                                                        <TextBlock.Style>
+                                                                            <Style TargetType="TextBlock">
+                                                                                <Setter Property="Foreground" Value="#4ADE80" />
+                                                                                <Style.Triggers>
+                                                                                    <DataTrigger Binding="{Binding IsOutOfStock}" Value="True">
+                                                                                        <Setter Property="Foreground" Value="#F87171" />
+                                                                                    </DataTrigger>
+                                                                                </Style.Triggers>
+                                                                            </Style>
+                                                                        </TextBlock.Style>
                                                                         <Run Text="Stock:"/>
-                                                                        <Run Text="{Binding Stock, Mode=OneWay}"/>
+                                                                        <Run Text="{Binding StockAvailable, Mode=OneWay}"/>
                                                                         <Run Text="u"/>
                                                                     </TextBlock>
                                                                 </Border>
