@@ -1212,7 +1212,8 @@
                                 <DataGridTextColumn Header="Categoria" Binding="{Binding CategoryName}" Width="150" />
                                 <DataGridTextColumn Header="Unidad" Binding="{Binding UnitType}" Width="80" />
                                 <DataGridTextColumn Header="Stock" Binding="{Binding Stock}" Width="90" />
-                                <DataGridTextColumn Header="Precio" Binding="{Binding SalePrice, StringFormat=C}" Width="110" />
+                                <DataGridTextColumn Header="Costo" Binding="{Binding CostPrice, StringFormat=C}" Width="110" />
+                                <DataGridTextColumn Header="Precio Venta" Binding="{Binding SalePrice, StringFormat=C}" Width="110" />
                             </DataGrid.Columns>
                         </DataGrid>
                         </Grid>
@@ -1258,6 +1259,8 @@
                                     <RowDefinition Height="Auto" />
                                     <RowDefinition Height="Auto" />
                                     <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
                                 </Grid.RowDefinitions>
 
                                 <!-- Header with close button -->
@@ -1283,14 +1286,17 @@
                                           ItemsSource="{Binding UnitTypes}"
                                           SelectedItem="{Binding ProductUnitType}" />
                                           
-                                <TextBlock Grid.Row="9" Text="{Binding PriceLabel}" Foreground="{StaticResource MutedTextBrush}" Margin="0,0,0,6" />
-                                <TextBox Grid.Row="10" Margin="0,0,0,10" Text="{Binding ProductSalePrice, UpdateSourceTrigger=PropertyChanged}" />
+                                <TextBlock Grid.Row="9" Text="Costo ($)" Foreground="{StaticResource MutedTextBrush}" Margin="0,0,0,6" />
+                                <TextBox Grid.Row="10" Margin="0,0,0,10" Text="{Binding ProductCostPrice, UpdateSourceTrigger=PropertyChanged}" />
+
+                                <TextBlock Grid.Row="11" Text="{Binding PriceLabel}" Foreground="{StaticResource MutedTextBrush}" Margin="0,0,0,6" />
+                                <TextBox Grid.Row="12" Margin="0,0,0,10" Text="{Binding ProductSalePrice, UpdateSourceTrigger=PropertyChanged}" />
                                 
-                                <TextBlock Grid.Row="11" Text="{Binding StockLabel}" Foreground="{StaticResource MutedTextBrush}" Margin="0,0,0,6" />
-                                <TextBox Grid.Row="12" Margin="0,0,0,10" Text="{Binding ProductStock, UpdateSourceTrigger=PropertyChanged}" />
+                                <TextBlock Grid.Row="13" Text="{Binding StockLabel}" Foreground="{StaticResource MutedTextBrush}" Margin="0,0,0,6" />
+                                <TextBox Grid.Row="14" Margin="0,0,0,10" Text="{Binding ProductStock, UpdateSourceTrigger=PropertyChanged}" />
                                 
-                                <TextBlock Grid.Row="13" Text="Categoria" Foreground="{StaticResource MutedTextBrush}" Margin="0,0,0,6" />
-                                <ComboBox Grid.Row="14" Margin="0,0,0,10"
+                                <TextBlock Grid.Row="15" Text="Categoria" Foreground="{StaticResource MutedTextBrush}" Margin="0,0,0,6" />
+                                <ComboBox Grid.Row="16" Margin="0,0,0,10"
                                           ItemsSource="{Binding Categories}"
                                           SelectedItem="{Binding SelectedCategory}"
                                           TextSearch.TextPath="Name">
@@ -1301,7 +1307,7 @@
                                     </ComboBox.ItemTemplate>
                                 </ComboBox>
 
-                                <Grid Grid.Row="15" VerticalAlignment="Top" Margin="0,0,0,16">
+                                <Grid Grid.Row="17" VerticalAlignment="Top" Margin="0,0,0,16">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*" />
                                         <ColumnDefinition Width="8" />
@@ -1314,7 +1320,7 @@
                                     <Button Grid.Column="2" Content="+ Categoria" Style="{StaticResource RoundedButton}" Command="{Binding CreateCategoryCommand}" />
                                 </Grid>
 
-                                <UniformGrid Grid.Row="16" Columns="3" Margin="0,30,0,0">
+                                <UniformGrid Grid.Row="18" Columns="3" Margin="0,30,0,0">
                                     <Button Content="Nuevo" Margin="0,0,9,0" Style="{StaticResource RoundedButton}" Command="{Binding NewProductCommand}" />
                                     <Button Content="Guardar" Margin="0,0,9,0" Style="{StaticResource PrimaryButton}" Command="{Binding SaveProductCommand}" />
                                     <Button Content="Eliminar" Style="{StaticResource RoundedButton}" Command="{Binding DeleteProductCommand}" />
@@ -1432,7 +1438,7 @@
                             </Grid>
                         </Border>
 
-                        <!-- KPI 2: Ingresos Totales -->
+                        <!-- KPI 2: Ingresos por Período -->
                         <Border Margin="0,0,14,0" CornerRadius="12" Background="#1E1E24" Padding="20,18">
                             <Grid>
                                 <Grid.RowDefinitions>
@@ -1441,22 +1447,40 @@
                                     <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="6"/>
                                     <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="10"/>
+                                    <RowDefinition Height="Auto"/>
                                 </Grid.RowDefinitions>
-                                <Border Width="36" Height="36" CornerRadius="8" Background="#1A3020">
+                                <Border Width="36" Height="36" CornerRadius="8" Background="#1A3020" HorizontalAlignment="Left">
                                     <TextBlock Text="&#xE8D1;" FontFamily="Segoe MDL2 Assets"
                                                FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"
                                                Foreground="#00E676"/>
                                 </Border>
-                                <Viewbox Grid.Row="2" MaxHeight="46" HorizontalAlignment="Left" Stretch="Uniform">
-                                    <TextBlock Text="{Binding IngresosTotales, StringFormat=C}"
-                                               FontSize="34" FontWeight="Bold" Foreground="#00E676"/>
+                                <Viewbox Grid.Row="2" MaxHeight="38" HorizontalAlignment="Left" Stretch="Uniform">
+                                    <TextBlock Text="{Binding IngresosPeriodo, StringFormat=C}"
+                                               FontSize="30" FontWeight="Bold" Foreground="#00E676"/>
                                 </Viewbox>
-                                <TextBlock Grid.Row="4" Text="Ingresos Totales"
+                                <TextBlock Grid.Row="4" Text="Ingresos"
                                            FontSize="13" Foreground="{StaticResource MutedTextBrush}"/>
+                                           
+                                <!-- Selectores Ingresos -->
+                                <Grid Grid.Row="6">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="8" />
+                                        <ColumnDefinition Width="80" />
+                                    </Grid.ColumnDefinitions>
+                                    <DatePicker SelectedDate="{Binding SelectedFechaIngresos, UpdateSourceTrigger=PropertyChanged}" 
+                                                Height="28" Padding="2" FontSize="11" />
+                                    <ComboBox Grid.Column="2" SelectedIndex="{Binding IsIngresosMensual, Converter={StaticResource BoolToIndexConverter}}"
+                                              Height="28" Padding="2" FontSize="11">
+                                        <ComboBoxItem Content="Día" />
+                                        <ComboBoxItem Content="Mes" />
+                                    </ComboBox>
+                                </Grid>
                             </Grid>
                         </Border>
 
-                        <!-- KPI 3: Método de Pago Más Usado -->
+                        <!-- KPI 3: Ganancia Neta -->
                         <Border Margin="0,0,14,0" CornerRadius="12" Background="#1E1E24" Padding="20,18">
                             <Grid>
                                 <Grid.RowDefinitions>
@@ -1465,17 +1489,36 @@
                                     <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="6"/>
                                     <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="10"/>
+                                    <RowDefinition Height="Auto"/>
                                 </Grid.RowDefinitions>
-                                <Border Width="36" Height="36" CornerRadius="8" Background="#1A2840">
-                                    <TextBlock Text="&#xE8C0;" FontFamily="Segoe MDL2 Assets"
+                                <Border Width="36" Height="36" CornerRadius="8" Background="#1A2840" HorizontalAlignment="Left">
+                                    <TextBlock Text="&#xE129;" FontFamily="Segoe MDL2 Assets"
                                                FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"
                                                Foreground="#38BDF8"/>
                                 </Border>
-                                <TextBlock Grid.Row="2" Text="{Binding MetodoPagoMasUsado}"
-                                           FontSize="26" FontWeight="Bold" Foreground="White"
-                                           TextTrimming="CharacterEllipsis"/>
-                                <TextBlock Grid.Row="4" Text="Método Más Usado"
+                                <Viewbox Grid.Row="2" MaxHeight="38" HorizontalAlignment="Left" Stretch="Uniform">
+                                    <TextBlock Text="{Binding GananciaNeta, StringFormat=C}"
+                                               FontSize="30" FontWeight="Bold" Foreground="#38BDF8"/>
+                                </Viewbox>
+                                <TextBlock Grid.Row="4" Text="Ganancia Neta"
                                            FontSize="13" Foreground="{StaticResource MutedTextBrush}"/>
+                                
+                                <!-- Selectores Ganancia -->
+                                <Grid Grid.Row="6">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="8" />
+                                        <ColumnDefinition Width="80" />
+                                    </Grid.ColumnDefinitions>
+                                    <DatePicker SelectedDate="{Binding SelectedFechaGanancia, UpdateSourceTrigger=PropertyChanged}" 
+                                                Height="28" Padding="2" FontSize="11" />
+                                    <ComboBox Grid.Column="2" SelectedIndex="{Binding IsGananciaMensual, Converter={StaticResource BoolToIndexConverter}}"
+                                              Height="28" Padding="2" FontSize="11">
+                                        <ComboBoxItem Content="Día" />
+                                        <ComboBoxItem Content="Mes" />
+                                    </ComboBox>
+                                </Grid>
                             </Grid>
                         </Border>
 

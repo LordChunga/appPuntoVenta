@@ -46,6 +46,7 @@ public sealed class StoreRepository(Database database)
                 p.InternalCode,
                 p.Name,
                 p.SalePrice,
+                p.CostPrice,
                 p.Stock,
                 p.CategoryId,
                 c.Name AS CategoryName,
@@ -73,6 +74,7 @@ public sealed class StoreRepository(Database database)
                 p.InternalCode,
                 p.Name,
                 p.SalePrice,
+                p.CostPrice,
                 p.Stock,
                 p.CategoryId,
                 c.Name AS CategoryName,
@@ -92,8 +94,8 @@ public sealed class StoreRepository(Database database)
         if (product.Id == 0)
         {
             await connection.ExecuteAsync("""
-                INSERT INTO Products (Barcode, InternalCode, Name, SalePrice, Stock, CategoryId, UnitType)
-                VALUES (@Barcode, @InternalCode, @Name, @SalePrice, @Stock, @CategoryId, @UnitType);
+                INSERT INTO Products (Barcode, InternalCode, Name, SalePrice, CostPrice, Stock, CategoryId, UnitType)
+                VALUES (@Barcode, @InternalCode, @Name, @SalePrice, @CostPrice, @Stock, @CategoryId, @UnitType);
                 """, product);
             return;
         }
@@ -104,6 +106,7 @@ public sealed class StoreRepository(Database database)
                 InternalCode = @InternalCode,
                 Name = @Name,
                 SalePrice = @SalePrice,
+                CostPrice = @CostPrice,
                 Stock = @Stock,
                 CategoryId = @CategoryId,
                 UnitType = @UnitType
@@ -174,14 +177,15 @@ public sealed class StoreRepository(Database database)
             }
 
             await connection.ExecuteAsync("""
-                INSERT INTO Products (Barcode, InternalCode, Name, SalePrice, Stock, CategoryId)
-                VALUES (@Barcode, @InternalCode, @Name, @SalePrice, 0, @CategoryId);
+                INSERT INTO Products (Barcode, InternalCode, Name, SalePrice, CostPrice, Stock, CategoryId)
+                VALUES (@Barcode, @InternalCode, @Name, @SalePrice, @CostPrice, 0, @CategoryId);
                 """, new
                 {
                     Barcode = product.Barcode ?? string.Empty,
                     InternalCode = product.Id.ToString(),
                     product.Name,
                     product.SalePrice,
+                    product.CostPrice,
                     CategoryId = categoryId.Value
                 }, transaction);
 
@@ -335,14 +339,15 @@ public sealed class StoreRepository(Database database)
         foreach (var item in items)
         {
             await connection.ExecuteAsync("""
-                INSERT INTO VentasDetalle (VentaId, ProductoNombre, Cantidad, PrecioUnitario, Subtotal)
-                VALUES (@VentaId, @ProductoNombre, @Cantidad, @PrecioUnitario, @Subtotal);
+                INSERT INTO VentasDetalle (VentaId, ProductoNombre, Cantidad, PrecioUnitario, CostoUnitario, Subtotal)
+                VALUES (@VentaId, @ProductoNombre, @Cantidad, @PrecioUnitario, @CostoUnitario, @Subtotal);
                 """, new
             {
                 VentaId = ventaId,
                 ProductoNombre = item.Name,
                 Cantidad = item.Quantity,
                 PrecioUnitario = item.UnitPrice,
+                CostoUnitario = item.CostPrice,
                 Subtotal = item.LineTotal
             }, transaction);
         }
@@ -548,6 +553,35 @@ public sealed class StoreRepository(Database database)
             MetodoPagoMasUsado = metodoPago,
             ProductoMasPopular = productoPopular
         };
+    }
+
+    public async Task<decimal> GetIngresosPorFechaAsync(string fecha, bool mensual)
+    {
+        using var connection = database.CreateConnection();
+        var filtro = mensual
+            ? "strftime('%Y-%m', Fecha) = @Fecha"
+            : "date(Fecha) = date(@Fecha)";
+        var fechaParam = mensual ? fecha.Substring(0, 7) : fecha;
+
+        return await connection.ExecuteScalarAsync<decimal>(
+            $"SELECT IFNULL(SUM(Total), 0) FROM Ventas WHERE Estado = 'Completada' AND {filtro};",
+            new { Fecha = fechaParam });
+    }
+
+    public async Task<decimal> GetGananciaNetaPorFechaAsync(string fecha, bool mensual)
+    {
+        using var connection = database.CreateConnection();
+        var filtro = mensual
+            ? "strftime('%Y-%m', v.Fecha) = @Fecha"
+            : "date(v.Fecha) = date(@Fecha)";
+        var fechaParam = mensual ? fecha.Substring(0, 7) : fecha;
+
+        return await connection.ExecuteScalarAsync<decimal>($"""
+            SELECT IFNULL(SUM(d.Subtotal - (d.CostoUnitario * d.Cantidad)), 0)
+            FROM VentasDetalle d
+            INNER JOIN Ventas v ON v.Id = d.VentaId
+            WHERE v.Estado = 'Completada' AND {filtro};
+            """, new { Fecha = fechaParam });
     }
 
     // ── Caja Diaria ──────────────────────────────────────────

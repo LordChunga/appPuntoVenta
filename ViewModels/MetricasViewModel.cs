@@ -12,9 +12,19 @@ public sealed partial class MetricasViewModel : ObservableObject
 
     // ── KPIs ──────────────────────────────────────────────────────────────────
     [ObservableProperty] private int totalVentas;
-    [ObservableProperty] private decimal ingresosTotales;
     [ObservableProperty] private string metodoPagoMasUsado = "-";
     [ObservableProperty] private string productoMasPopular = "-";
+
+    // ── Ingresos y Ganancias por Período ──────────────────────────────────────
+    [ObservableProperty] private decimal ingresosPeriodo;
+    [ObservableProperty] private decimal gananciaNeta;
+
+    [ObservableProperty] private DateTime selectedFechaIngresos = DateTime.Today;
+    [ObservableProperty] private DateTime selectedFechaGanancia = DateTime.Today;
+
+    // true = Mensual, false = Diario
+    [ObservableProperty] private bool isIngresosMensual;
+    [ObservableProperty] private bool isGananciaMensual;
 
     // ── Lista de ventas ───────────────────────────────────────────────────────
     [ObservableProperty] private ObservableCollection<Venta> ventas = [];
@@ -38,18 +48,26 @@ public sealed partial class MetricasViewModel : ObservableObject
 
     partial void OnSearchTextChanged(string value) => _ = LoadAsync();
 
+    partial void OnSelectedFechaIngresosChanged(DateTime value) => _ = RefreshIngresosAsync();
+    partial void OnIsIngresosMensualChanged(bool value) => _ = RefreshIngresosAsync();
+
+    partial void OnSelectedFechaGananciaChanged(DateTime value) => _ = RefreshGananciaAsync();
+    partial void OnIsGananciaMensualChanged(bool value) => _ = RefreshGananciaAsync();
+
     /// <summary>Carga KPIs y lista de ventas. Se llama al navegar a la pestaña.</summary>
     [RelayCommand]
     public async Task LoadAsync()
     {
         try
         {
-            // KPIs
+            // KPIs Generales
             var kpis = await repository.GetMetricasKpisAsync();
             TotalVentas       = kpis.TotalVentas;
-            IngresosTotales   = kpis.IngresosTotales;
             MetodoPagoMasUsado = kpis.MetodoPagoMasUsado;
             ProductoMasPopular = kpis.ProductoMasPopular;
+
+            await RefreshIngresosAsync();
+            await RefreshGananciaAsync();
 
             // DataGrid
             var rows = await repository.GetVentasAsync(SearchText);
@@ -60,6 +78,32 @@ public sealed partial class MetricasViewModel : ObservableObject
         catch (Exception ex)
         {
             StatusMessage = $"Error al cargar métricas: {ex.Message}";
+        }
+    }
+
+    private async Task RefreshIngresosAsync()
+    {
+        try
+        {
+            var dateStr = SelectedFechaIngresos.ToString("yyyy-MM-dd");
+            IngresosPeriodo = await repository.GetIngresosPorFechaAsync(dateStr, IsIngresosMensual);
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"Error al cargar ingresos: {ex.Message}";
+        }
+    }
+
+    private async Task RefreshGananciaAsync()
+    {
+        try
+        {
+            var dateStr = SelectedFechaGanancia.ToString("yyyy-MM-dd");
+            GananciaNeta = await repository.GetGananciaNetaPorFechaAsync(dateStr, IsGananciaMensual);
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"Error al cargar ganancia: {ex.Message}";
         }
     }
 

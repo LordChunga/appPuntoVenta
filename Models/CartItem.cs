@@ -25,6 +25,7 @@ public sealed partial class CartItem : ObservableObject
     public string Code { get; init; } = string.Empty;
     public string Name { get; init; } = string.Empty;
     public decimal UnitPrice { get; init; }
+    public decimal CostPrice { get; init; }
     public string UnitType { get; init; } = "Unidad";
     /// <summary>Stock disponible al momento de agregar el producto al carrito (usado para validación).</summary>
     public int StockAvailable { get; init; }

@@ -5,4 +5,5 @@ public sealed record ProductImportRow(
     string Barcode,
     string Name,
     decimal SalePrice,
+    decimal CostPrice,
     string CategoryName);

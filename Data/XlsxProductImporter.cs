@@ -35,6 +35,7 @@ public static class XlsxProductImporter
         var barcodeColumn = FindColumn(headers, "codigobarra", "codigodebarra", "codigobarras", "barcode", "barras");
         var nameColumn = FindColumn(headers, "producto", "nombre", "nombreproducto");
         var priceColumn = FindColumn(headers, "precio", "precioventa");
+        var costColumn = FindColumn(headers, "costo", "costoprecio", "preciocompra", "preciocosto");
         var categoryColumn = FindColumn(headers, "categoria");
 
         if (idColumn is null || barcodeColumn is null || nameColumn is null || priceColumn is null || categoryColumn is null)
@@ -50,6 +51,7 @@ public static class XlsxProductImporter
             var barcode = GetValue(cells, barcodeColumn);
             var name = GetValue(cells, nameColumn);
             var priceText = GetValue(cells, priceColumn);
+            var costText = costColumn is not null ? GetValue(cells, costColumn) : "0";
             var category = GetValue(cells, categoryColumn);
 
             if (!TryParseId(idText, out var id)
@@ -61,11 +63,14 @@ public static class XlsxProductImporter
                 continue;
             }
 
+            TryParsePrice(costText, out var cost);
+
             products.Add(new ProductImportRow(
                 id,
                 barcode.Trim(),
                 name.Trim(),
                 price,
+                cost,
                 category.Trim()));
         }
 

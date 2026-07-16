@@ -41,6 +41,7 @@ public sealed class Database
                 InternalCode TEXT NOT NULL DEFAULT '' COLLATE NOCASE,
                 Name TEXT NOT NULL,
                 SalePrice NUMERIC NOT NULL CHECK (SalePrice >= 0),
+                CostPrice NUMERIC NOT NULL DEFAULT 0,
                 Stock INTEGER NOT NULL,
                 CategoryId INTEGER NOT NULL,
                 FOREIGN KEY (CategoryId) REFERENCES Categories(Id)
@@ -64,6 +65,7 @@ public sealed class Database
                 ProductoNombre  TEXT NOT NULL,
                 Cantidad        INTEGER NOT NULL CHECK (Cantidad > 0),
                 PrecioUnitario  NUMERIC NOT NULL CHECK (PrecioUnitario >= 0),
+                CostoUnitario   NUMERIC NOT NULL DEFAULT 0,
                 Subtotal        NUMERIC NOT NULL CHECK (Subtotal >= 0),
                 FOREIGN KEY (VentaId) REFERENCES Ventas(Id)
             );
@@ -93,6 +95,8 @@ public sealed class Database
         await MigrateAddUnitTypeToProductsAsync(connection);
         await MigrateRemoveStockCheckAsync(connection);
         await MigrateCreateCajaDiariaAsync(connection);
+        await MigrateAddCostPriceToProductsAsync(connection);
+        await MigrateAddCostoUnitarioToVentasDetalleAsync(connection);
     }
 
     private static async Task MigrateRemoveUniqueConstraintsAsync(IDbConnection connection)
@@ -209,5 +213,31 @@ public sealed class Database
                 MontoInicial NUMERIC NOT NULL DEFAULT 0
             );
             """);
+    }
+
+    private static async Task MigrateAddCostPriceToProductsAsync(IDbConnection connection)
+    {
+        var columns = await connection.QueryAsync<dynamic>(
+            "PRAGMA table_info(Products);");
+
+        var hasCostPrice = columns.Any(c => ((string)c.name) == "CostPrice");
+        if (!hasCostPrice)
+        {
+            await connection.ExecuteAsync(
+                "ALTER TABLE Products ADD COLUMN CostPrice NUMERIC NOT NULL DEFAULT 0;");
+        }
+    }
+
+    private static async Task MigrateAddCostoUnitarioToVentasDetalleAsync(IDbConnection connection)
+    {
+        var columns = await connection.QueryAsync<dynamic>(
+            "PRAGMA table_info(VentasDetalle);");
+
+        var hasCostoUnitario = columns.Any(c => ((string)c.name) == "CostoUnitario");
+        if (!hasCostoUnitario)
+        {
+            await connection.ExecuteAsync(
+                "ALTER TABLE VentasDetalle ADD COLUMN CostoUnitario NUMERIC NOT NULL DEFAULT 0;");
+        }
     }
 }

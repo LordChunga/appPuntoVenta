@@ -50,6 +50,9 @@ public sealed partial class MainViewModel : ObservableObject
     private decimal productSalePrice;
 
     [ObservableProperty]
+    private decimal productCostPrice;
+
+    [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(SaveProductCommand))]
     private int productStock;
 
@@ -240,6 +243,7 @@ public sealed partial class MainViewModel : ObservableObject
         ProductInternalCode = value.InternalCode;
         ProductName = value.Name;
         ProductSalePrice = value.SalePrice;
+        ProductCostPrice = value.CostPrice;
         ProductStock = value.Stock;
         SelectedCategory = Categories.FirstOrDefault(category => category.Id == value.CategoryId);
         ProductUnitType = value.UnitType;
@@ -357,6 +361,7 @@ public sealed partial class MainViewModel : ObservableObject
             InternalCode = ProductInternalCode.Trim(),
             Name = ProductName.Trim(),
             SalePrice = ProductSalePrice,
+            CostPrice = ProductCostPrice,
             Stock = ProductStock,
             CategoryId = SelectedCategory.Id,
             UnitType = ProductUnitType
@@ -600,6 +605,7 @@ public sealed partial class MainViewModel : ObservableObject
                 Code = string.IsNullOrWhiteSpace(product.Barcode) ? product.InternalCode : product.Barcode,
                 Name = product.Name,
                 UnitPrice = product.SalePrice,
+                CostPrice = product.CostPrice,
                 UnitType = product.UnitType,
                 Quantity = 1,
                 StockAvailable = product.Stock
@@ -642,6 +648,7 @@ public sealed partial class MainViewModel : ObservableObject
                 : WeightDialogProduct.Barcode,
             Name = WeightDialogProduct.Name,
             UnitPrice = WeightDialogProduct.SalePrice,
+            CostPrice = WeightDialogProduct.CostPrice,
             UnitType = WeightDialogProduct.UnitType,
             Quantity = qty,
             StockAvailable = WeightDialogProduct.Stock
@@ -703,6 +710,7 @@ public sealed partial class MainViewModel : ObservableObject
                 Code = "MANUAL",
                 Name = CustomAmountName.Trim(),
                 UnitPrice = price,
+                CostPrice = 0,
                 UnitType = "Unidad",
                 Quantity = 1,
                 StockAvailable = 999999
@@ -1009,6 +1017,7 @@ public sealed partial class MainViewModel : ObservableObject
         ProductInternalCode = string.Empty;
         ProductName = string.Empty;
         ProductSalePrice = 0;
+        ProductCostPrice = 0;
         ProductStock = 0;
         SelectedCategory = Categories.FirstOrDefault();
         SelectedProduct = null;

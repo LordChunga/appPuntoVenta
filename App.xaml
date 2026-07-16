@@ -1,8 +1,10 @@
 <Application x:Class="MiniPosWpf.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:converters="clr-namespace:MiniPosWpf.Converters"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
+        <converters:BoolToIndexConverter x:Key="BoolToIndexConverter" />
         <SolidColorBrush x:Key="AppBackground" Color="#111318" />
         <SolidColorBrush x:Key="PanelBackground" Color="#181B22" />
         <SolidColorBrush x:Key="ControlBackground" Color="#20242D" />
