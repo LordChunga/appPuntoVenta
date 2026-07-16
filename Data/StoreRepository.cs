@@ -127,12 +127,12 @@ public sealed class StoreRepository(Database database)
         foreach (var product in products)
         {
             // Check if a product with the same non-empty barcode or same name already exists
-            int exists;
+            int? existingId = null;
             if (!string.IsNullOrWhiteSpace(product.Barcode))
             {
-                exists = await connection.ExecuteScalarAsync<int>("""
-                    SELECT COUNT(1)
-                    FROM Products
+                existingId = await connection.QuerySingleOrDefaultAsync<int?>(
+                    """
+                    SELECT Id FROM Products
                     WHERE Barcode = @Barcode COLLATE NOCASE
                        OR Name = @Name COLLATE NOCASE;
                     """, new
@@ -143,20 +143,14 @@ public sealed class StoreRepository(Database database)
             }
             else
             {
-                exists = await connection.ExecuteScalarAsync<int>("""
-                    SELECT COUNT(1)
-                    FROM Products
+                existingId = await connection.QuerySingleOrDefaultAsync<int?>(
+                    """
+                    SELECT Id FROM Products
                     WHERE Name = @Name COLLATE NOCASE;
                     """, new
                     {
                         product.Name
                     }, transaction);
-            }
-
-            if (exists > 0)
-            {
-                skippedProducts++;
-                continue;
             }
 
             var categoryName = product.CategoryName.Trim();
@@ -176,20 +170,43 @@ public sealed class StoreRepository(Database database)
                 createdCategories++;
             }
 
-            await connection.ExecuteAsync("""
-                INSERT INTO Products (Barcode, InternalCode, Name, SalePrice, CostPrice, Stock, CategoryId)
-                VALUES (@Barcode, @InternalCode, @Name, @SalePrice, @CostPrice, 0, @CategoryId);
-                """, new
-                {
-                    Barcode = product.Barcode ?? string.Empty,
-                    InternalCode = product.Id.ToString(),
-                    product.Name,
-                    product.SalePrice,
-                    product.CostPrice,
-                    CategoryId = categoryId.Value
-                }, transaction);
-
-            importedProducts++;
+            if (existingId.HasValue)
+            {
+                await connection.ExecuteAsync("""
+                    UPDATE Products
+                    SET Barcode = @Barcode,
+                        Name = @Name,
+                        SalePrice = @SalePrice,
+                        CostPrice = @CostPrice,
+                        CategoryId = @CategoryId
+                    WHERE Id = @Id;
+                    """, new
+                    {
+                        Id = existingId.Value,
+                        Barcode = product.Barcode ?? string.Empty,
+                        product.Name,
+                        product.SalePrice,
+                        product.CostPrice,
+                        CategoryId = categoryId.Value
+                    }, transaction);
+                importedProducts++;
+            }
+            else
+            {
+                await connection.ExecuteAsync("""
+                    INSERT INTO Products (Barcode, InternalCode, Name, SalePrice, CostPrice, Stock, CategoryId)
+                    VALUES (@Barcode, @InternalCode, @Name, @SalePrice, @CostPrice, 0, @CategoryId);
+                    """, new
+                    {
+                        Barcode = product.Barcode ?? string.Empty,
+                        InternalCode = product.Id.ToString(),
+                        product.Name,
+                        product.SalePrice,
+                        product.CostPrice,
+                        CategoryId = categoryId.Value
+                    }, transaction);
+                importedProducts++;
+            }
         }
 
         transaction.Commit();
