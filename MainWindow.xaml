@@ -453,7 +453,7 @@
 
                                     <!-- Botón Agregar -->
                                     <Button Grid.Column="4" Padding="14,10" Cursor="Hand"
-                                            Command="{Binding AddSaleSearchToCartCommand}">
+                                            Command="{Binding OpenCustomAmountDialogCommand}">
                                         <Button.Style>
                                             <Style TargetType="Button">
                                                 <Setter Property="Background" Value="#1E1E28"/>
@@ -1022,6 +1022,49 @@
                                 <UniformGrid Grid.Row="3" Columns="2">
                                     <Button Content="Cancelar" Margin="0,0,9,0" Style="{StaticResource RoundedButton}" Command="{Binding CloseWeightDialogCommand}" />
                                     <Button Content="Confirmar" Style="{StaticResource PrimaryButton}" Command="{Binding ConfirmWeightDialogCommand}" />
+                                </UniformGrid>
+                            </Grid>
+                        </Border>
+                    </Grid>
+
+                    <!-- Modal overlay for custom amount / manual product -->
+                    <Grid Grid.ColumnSpan="3" Grid.RowSpan="3"
+                          Visibility="{Binding IsCustomAmountDialogOpen, Converter={StaticResource BoolToVis}}">
+                        <Border Background="#CC000000">
+                            <Border.InputBindings>
+                                <MouseBinding MouseAction="LeftClick" Command="{Binding CloseCustomAmountDialogCommand}" />
+                            </Border.InputBindings>
+                        </Border>
+
+                        <Border Background="{StaticResource PanelBackground}"
+                                CornerRadius="12"
+                                Padding="28"
+                                Width="350"
+                                VerticalAlignment="Center"
+                                HorizontalAlignment="Center"
+                                BorderBrush="#3A3A44"
+                                BorderThickness="1">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+
+                                <TextBlock Text="Agregar producto manual" FontSize="20" FontWeight="SemiBold" Margin="0,0,0,16" />
+                                
+                                <TextBlock Grid.Row="1" Text="Nombre / Descripción" Foreground="{StaticResource MutedTextBrush}" Margin="0,0,0,6" />
+                                <TextBox Grid.Row="2" Margin="0,0,0,14" Text="{Binding CustomAmountName, UpdateSourceTrigger=PropertyChanged}" FontSize="16" />
+
+                                <TextBlock Grid.Row="3" Text="Monto ($)" Foreground="{StaticResource MutedTextBrush}" Margin="0,0,0,6" />
+                                <TextBox Grid.Row="4" Margin="0,0,0,20" Text="{Binding CustomAmountPrice, UpdateSourceTrigger=PropertyChanged}" FontSize="18" />
+
+                                <UniformGrid Grid.Row="5" Columns="2">
+                                    <Button Content="Cancelar" Margin="0,0,9,0" Style="{StaticResource RoundedButton}" Command="{Binding CloseCustomAmountDialogCommand}" />
+                                    <Button Content="Agregar" Style="{StaticResource PrimaryButton}" Command="{Binding ConfirmCustomAmountCommand}" />
                                 </UniformGrid>
                             </Grid>
                         </Border>

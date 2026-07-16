@@ -82,6 +82,8 @@ public sealed partial class MainViewModel : ObservableObject
     [NotifyCanExecuteChangedFor(nameof(ConfirmPurchaseCommand))]
     private int purchaseQuantity = 1;
 
+    // ── Dialogs ───────────────────────────────────────────────
+
     [ObservableProperty]
     private ObservableCollection<CartItem> cart = [];
 
@@ -182,6 +184,19 @@ public sealed partial class MainViewModel : ObservableObject
 
     [ObservableProperty]
     private string weightDialogUnitLabel = string.Empty;
+
+    // ── Custom Amount Dialog (POS) ───────────────────────────
+
+    [ObservableProperty]
+    private bool isCustomAmountDialogOpen;
+
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(ConfirmCustomAmountCommand))]
+    private string customAmountName = string.Empty;
+
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(ConfirmCustomAmountCommand))]
+    private string customAmountPrice = string.Empty;
 
     public decimal Subtotal => Cart.Sum(item => item.LineTotal);
     public decimal Total => Subtotal;
@@ -590,6 +605,58 @@ public sealed partial class MainViewModel : ObservableObject
         IsWeightDialogOpen = false;
         WeightDialogProduct = null;
         WeightDialogQuantity = string.Empty;
+    }
+
+    [RelayCommand]
+    private void OpenCustomAmountDialog()
+    {
+        CustomAmountName = "Varios";
+        CustomAmountPrice = string.Empty;
+        IsCustomAmountDialogOpen = true;
+    }
+
+    [RelayCommand]
+    private void CloseCustomAmountDialog()
+    {
+        IsCustomAmountDialogOpen = false;
+        CustomAmountName = string.Empty;
+        CustomAmountPrice = string.Empty;
+    }
+
+    private bool CanConfirmCustomAmount() =>
+        !string.IsNullOrWhiteSpace(CustomAmountName) &&
+        decimal.TryParse(CustomAmountPrice.Replace(',', '.'),
+            System.Globalization.NumberStyles.Any,
+            System.Globalization.CultureInfo.InvariantCulture,
+            out var price) && price > 0;
+
+    [RelayCommand(CanExecute = nameof(CanConfirmCustomAmount))]
+    private void ConfirmCustomAmount()
+    {
+        if (decimal.TryParse(CustomAmountPrice.Replace(',', '.'),
+                System.Globalization.NumberStyles.Any,
+                System.Globalization.CultureInfo.InvariantCulture,
+                out var price) && price > 0)
+        {
+            var cartItem = new CartItem
+            {
+                ProductId = 0,
+                Code = "MANUAL",
+                Name = CustomAmountName.Trim(),
+                UnitPrice = price,
+                UnitType = "Unidad",
+                Quantity = 1,
+                StockAvailable = 999999
+            };
+
+            Cart.Add(cartItem);
+            RefreshTotals();
+            ConfirmSaleCommand.NotifyCanExecuteChanged();
+
+            IsCustomAmountDialogOpen = false;
+            CustomAmountName = string.Empty;
+            CustomAmountPrice = string.Empty;
+        }
     }
 
     [RelayCommand]
