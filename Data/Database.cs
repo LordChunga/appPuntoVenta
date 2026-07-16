@@ -80,6 +80,11 @@ public sealed class Database
             INSERT OR IGNORE INTO Categories (Name) VALUES
                 ('alfajores'),
                 ('botellas');
+
+            CREATE TABLE IF NOT EXISTS CajaDiaria (
+                Fecha TEXT PRIMARY KEY,
+                MontoInicial NUMERIC NOT NULL DEFAULT 0
+            );
             """);
 
         await MigrateRemoveUniqueConstraintsAsync(connection);
@@ -87,6 +92,7 @@ public sealed class Database
         await MigrateAddInvoiceNumberToVentasAsync(connection);
         await MigrateAddUnitTypeToProductsAsync(connection);
         await MigrateRemoveStockCheckAsync(connection);
+        await MigrateCreateCajaDiariaAsync(connection);
     }
 
     private static async Task MigrateRemoveUniqueConstraintsAsync(IDbConnection connection)
@@ -192,6 +198,16 @@ public sealed class Database
             DROP TABLE Products;
 
             ALTER TABLE Products_new_2 RENAME TO Products;
+            """);
+    }
+
+    private static async Task MigrateCreateCajaDiariaAsync(IDbConnection connection)
+    {
+        await connection.ExecuteAsync("""
+            CREATE TABLE IF NOT EXISTS CajaDiaria (
+                Fecha TEXT PRIMARY KEY,
+                MontoInicial NUMERIC NOT NULL DEFAULT 0
+            );
             """);
     }
 }

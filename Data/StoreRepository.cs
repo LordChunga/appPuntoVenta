@@ -549,4 +549,35 @@ public sealed class StoreRepository(Database database)
             ProductoMasPopular = productoPopular
         };
     }
+
+    // ── Caja Diaria ──────────────────────────────────────────
+
+    public async Task<decimal?> GetCajaInicialAsync(string fecha)
+    {
+        using var connection = database.CreateConnection();
+        return await connection.QuerySingleOrDefaultAsync<decimal?>(
+            "SELECT MontoInicial FROM CajaDiaria WHERE Fecha = @Fecha;",
+            new { Fecha = fecha });
+    }
+
+    public async Task SaveCajaInicialAsync(string fecha, decimal monto)
+    {
+        using var connection = database.CreateConnection();
+        await connection.ExecuteAsync("""
+            INSERT INTO CajaDiaria (Fecha, MontoInicial) VALUES (@Fecha, @Monto)
+            ON CONFLICT(Fecha) DO UPDATE SET MontoInicial = @Monto;
+            """, new { Fecha = fecha, Monto = monto });
+    }
+
+    public async Task<decimal> GetTotalVentasEfectivoHoyAsync(string fecha)
+    {
+        using var connection = database.CreateConnection();
+        return await connection.ExecuteScalarAsync<decimal>("""
+            SELECT COALESCE(SUM(Total), 0)
+            FROM Ventas
+            WHERE date(Fecha) = date(@Fecha)
+              AND MetodoPago = 'Efectivo'
+              AND Estado = 'Completada';
+            """, new { Fecha = fecha });
+    }
 }

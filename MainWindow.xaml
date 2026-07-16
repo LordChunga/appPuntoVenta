@@ -303,14 +303,32 @@
 
                 <Border Grid.Row="2" Style="{StaticResource PanelBorder}" Padding="16" Margin="0,22,0,16">
                     <StackPanel>
-                        <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                            <TextBlock Text="&#xE72E;" FontFamily="Segoe MDL2 Assets" Foreground="{StaticResource AccentBrush}" FontSize="18" Margin="0,0,10,0" />
-                            <StackPanel>
+                        <Grid Margin="0,0,0,10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            
+                            <TextBlock Grid.Column="0" Text="&#xE72E;" FontFamily="Segoe MDL2 Assets" Foreground="{StaticResource AccentBrush}" FontSize="18" Margin="0,0,10,0" VerticalAlignment="Center" />
+                            
+                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                 <TextBlock Text="Mi Caja" FontWeight="SemiBold" />
                                 <TextBlock Text="Abierta" FontSize="12" Foreground="{StaticResource TotalBrush}" />
                             </StackPanel>
-                        </StackPanel>
-                        <TextBlock Text="$1000.00" FontSize="24" FontWeight="Bold" />
+
+                            <Button Grid.Column="2" 
+                                    Command="{Binding OpenEditCajaCommand}" 
+                                    Background="Transparent" 
+                                    BorderThickness="0" 
+                                    Foreground="{StaticResource MutedTextBrush}"
+                                    Cursor="Hand"
+                                    ToolTip="Editar Caja Inicial"
+                                    VerticalAlignment="Top">
+                                <TextBlock Text="&#xE70F;" FontFamily="Segoe MDL2 Assets" FontSize="14" />
+                            </Button>
+                        </Grid>
+                        <TextBlock Text="{Binding CajaActualTotal, StringFormat=C}" FontSize="24" FontWeight="Bold" />
                     </StackPanel>
                 </Border>
 
@@ -1044,6 +1062,37 @@
                                     <Button Content="Confirmar" Style="{StaticResource PrimaryButton}" Command="{Binding ConfirmWeightDialogCommand}" />
                                 </UniformGrid>
                             </Grid>
+                        </Border>
+                    </Grid>
+
+                    <!-- Modal overlay for Caja Inicial -->
+                    <Grid Grid.ColumnSpan="3" Grid.RowSpan="3"
+                          Visibility="{Binding IsCajaInicialDialogOpen, Converter={StaticResource BoolToVis}}">
+                        <!-- Black semi-transparent background. We do not bind a close command to avoid closing if it's mandatory at startup -->
+                        <Border Background="#CC000000" />
+
+                        <Border Background="{StaticResource PanelBackground}"
+                                CornerRadius="12"
+                                Padding="28"
+                                Width="350"
+                                VerticalAlignment="Center"
+                                HorizontalAlignment="Center"
+                                BorderBrush="#3A3A44"
+                                BorderThickness="1">
+                            <StackPanel>
+                                <TextBlock Text="Monto en Caja" FontSize="20" FontWeight="SemiBold" Foreground="White" Margin="0,0,0,8" />
+                                <TextBlock Text="Ingresá el monto de dinero disponible en la caja física al comienzo del turno." Foreground="{StaticResource MutedTextBrush}" TextWrapping="Wrap" Margin="0,0,0,20" />
+
+                                <TextBlock Text="Monto Inicial ($)" Foreground="{StaticResource MutedTextBrush}" Margin="0,0,0,5" />
+                                <TextBox Text="{Binding CajaInicialInput, UpdateSourceTrigger=PropertyChanged}"
+                                         Style="{StaticResource FormTextBox}"
+                                         Margin="0,0,0,24" />
+
+                                <Button Content="Guardar Caja"
+                                        Command="{Binding ConfirmCajaInicialCommand}"
+                                        Style="{StaticResource PrimaryButton}"
+                                        Height="40" />
+                            </StackPanel>
                         </Border>
                     </Grid>
 

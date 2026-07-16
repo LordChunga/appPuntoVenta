@@ -82,6 +82,22 @@ public sealed partial class MainViewModel : ObservableObject
     [NotifyCanExecuteChangedFor(nameof(ConfirmPurchaseCommand))]
     private int purchaseQuantity = 1;
 
+
+
+    // ── Caja Diaria ───────────────────────────────────────────
+
+    [ObservableProperty]
+    private decimal cajaActualTotal;
+
+    [ObservableProperty]
+    private bool isCajaInicialDialogOpen;
+
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(ConfirmCajaInicialCommand))]
+    private string cajaInicialInput = string.Empty;
+
+    private readonly string todayString = DateTime.Now.ToString("yyyy-MM-dd");
+
     // ── Dialogs ───────────────────────────────────────────────
 
     [ObservableProperty]
@@ -270,8 +286,59 @@ public sealed partial class MainViewModel : ObservableObject
         await SearchSaleProductsAsync();
         await SearchPurchaseProductsAsync();
         await RefreshPosClientsAsync();
+        await InitCajaDiariaAsync();
         SelectedCategory ??= Categories.FirstOrDefault();
         StatusMessage = "Datos cargados.";
+    }
+
+    // ── Caja Diaria Methods ───────────────────────────────────
+
+    private async Task InitCajaDiariaAsync()
+    {
+        var inicial = await repository.GetCajaInicialAsync(todayString);
+        if (inicial is null)
+        {
+            CajaInicialInput = string.Empty;
+            IsCajaInicialDialogOpen = true;
+        }
+        else
+        {
+            CajaInicialInput = inicial.Value.ToString("F2");
+            await RefreshCajaTotalAsync();
+        }
+    }
+
+    [RelayCommand]
+    private void OpenEditCaja()
+    {
+        IsCajaInicialDialogOpen = true;
+    }
+
+    private bool CanConfirmCajaInicial() =>
+        decimal.TryParse(CajaInicialInput.Replace(',', '.'),
+            System.Globalization.NumberStyles.Any,
+            System.Globalization.CultureInfo.InvariantCulture,
+            out var monto) && monto >= 0;
+
+    [RelayCommand(CanExecute = nameof(CanConfirmCajaInicial))]
+    private async Task ConfirmCajaInicialAsync()
+    {
+        if (decimal.TryParse(CajaInicialInput.Replace(',', '.'),
+            System.Globalization.NumberStyles.Any,
+            System.Globalization.CultureInfo.InvariantCulture,
+            out var monto) && monto >= 0)
+        {
+            await repository.SaveCajaInicialAsync(todayString, monto);
+            IsCajaInicialDialogOpen = false;
+            await RefreshCajaTotalAsync();
+        }
+    }
+
+    private async Task RefreshCajaTotalAsync()
+    {
+        var inicial = await repository.GetCajaInicialAsync(todayString) ?? 0;
+        var efectivoHoy = await repository.GetTotalVentasEfectivoHoyAsync(todayString);
+        CajaActualTotal = inicial + efectivoHoy;
     }
 
     [RelayCommand(CanExecute = nameof(CanSaveProduct))]
@@ -717,6 +784,8 @@ public sealed partial class MainViewModel : ObservableObject
             string finalClienteName = "Consumidor Final";
 
             await repository.ConfirmSaleAsync(Cart, metodoPago: MetodoPago, cliente: finalClienteName, clientId: finalClientId);
+            await RefreshCajaTotalAsync();
+            
             Cart.Clear();
             MetodoPago = "Efectivo";   // resetear al método por defecto
             SelectedPosClient = PosClients.FirstOrDefault();  // resetear cliente a Consumidor Final
