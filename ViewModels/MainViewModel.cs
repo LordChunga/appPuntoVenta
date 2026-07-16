@@ -525,11 +525,7 @@ public sealed partial class MainViewModel : ObservableObject
         var cartItem = Cart.FirstOrDefault(item => item.ProductId == product.Id);
         if (cartItem is null)
         {
-            if (product.Stock <= 0)
-            {
-                StatusMessage = $"Sin stock disponible para '{product.Name}'.";
-                return;
-            }
+
 
             Cart.Add(new CartItem
             {
@@ -544,11 +540,7 @@ public sealed partial class MainViewModel : ObservableObject
         }
         else
         {
-            if (cartItem.Quantity >= cartItem.StockAvailable)
-            {
-                StatusMessage = $"Stock insuficiente: máximo {cartItem.StockAvailable} unidad(es) de '{product.Name}'.";
-                return;
-            }
+
 
             cartItem.Quantity++;
             RefreshTotals();
@@ -680,11 +672,7 @@ public sealed partial class MainViewModel : ObservableObject
             return;
         }
 
-        if (item.Quantity >= item.StockAvailable)
-        {
-            StatusMessage = $"Stock insuficiente: máximo {item.StockAvailable} unidad(es) de '{item.Name}'.";
-            return;
-        }
+
 
         item.Quantity++;
         RefreshTotals();
