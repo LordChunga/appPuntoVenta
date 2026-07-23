@@ -12,6 +12,7 @@ namespace MiniPosWpf.ViewModels;
 public sealed partial class MainViewModel : ObservableObject
 {
     private readonly StoreRepository repository;
+    private bool _suppressPurchaseSearch;
 
     [ObservableProperty]
     private int activeTabIndex;
@@ -282,7 +283,8 @@ public sealed partial class MainViewModel : ObservableObject
 
     partial void OnPurchaseProductSearchTextChanged(string value)
     {
-        _ = SearchPurchaseProductsAsync();
+        if (!_suppressPurchaseSearch)
+            _ = SearchPurchaseProductsAsync();
     }
 
     partial void OnClientSearchTextChanged(string value)
@@ -626,10 +628,19 @@ public sealed partial class MainViewModel : ObservableObject
         OnPropertyChanged(nameof(PurchaseItemsCount));
         ConfirmPurchaseCartCommand.NotifyCanExecuteChanged();
 
-        // Reset form — null PurchaseProduct first to avoid re-entrant cascade
-        // when SearchPurchaseProductsAsync replaces the collection.
-        PurchaseProduct = null;
-        PurchaseProductSearchText = string.Empty;
+        // Suppress the search trigger while resetting the form to avoid
+        // an infinite loop: clearing text → search → replace collection
+        // → WPF resets PurchaseProduct → OnChanged fires again → loop.
+        _suppressPurchaseSearch = true;
+        try
+        {
+            PurchaseProduct = null;
+            PurchaseProductSearchText = string.Empty;
+        }
+        finally
+        {
+            _suppressPurchaseSearch = false;
+        }
 
         StatusMessage = $"{productName} agregado a la nueva compra.";
     }
