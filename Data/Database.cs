@@ -79,6 +79,22 @@ public sealed class Database
                 DeudaTotal NUMERIC NOT NULL DEFAULT 0
             );
 
+            CREATE TABLE IF NOT EXISTS Compras (
+                Id TEXT PRIMARY KEY,
+                Fecha TEXT NOT NULL,
+                Total NUMERIC NOT NULL CHECK (Total >= 0)
+            );
+
+            CREATE TABLE IF NOT EXISTS ComprasDetalle (
+                Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                CompraId TEXT NOT NULL,
+                ProductoNombre TEXT NOT NULL,
+                Cantidad INTEGER NOT NULL CHECK (Cantidad > 0),
+                CostoUnitario NUMERIC NOT NULL CHECK (CostoUnitario >= 0),
+                Subtotal NUMERIC NOT NULL CHECK (Subtotal >= 0),
+                FOREIGN KEY (CompraId) REFERENCES Compras(Id)
+            );
+
             INSERT OR IGNORE INTO Categories (Name) VALUES
                 ('alfajores'),
                 ('botellas');

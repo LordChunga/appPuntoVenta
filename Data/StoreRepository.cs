@@ -631,4 +631,108 @@ public sealed class StoreRepository(Database database)
               AND Estado = 'Completada';
             """, new { Fecha = fecha });
     }
+
+    // ── Compras (Historial) ──────────────────────────────────
+
+    public async Task<IReadOnlyList<CompraHistorial>> GetHistorialComprasAsync()
+    {
+        using var connection = database.CreateConnection();
+        var compras = await connection.QueryAsync<CompraHistorial>("""
+            SELECT
+                c.Id,
+                c.Fecha,
+                c.Total,
+                IFNULL(
+                    (SELECT GROUP_CONCAT(d.ProductoNombre || ' x' || d.Cantidad, ', ')
+                     FROM ComprasDetalle d WHERE d.CompraId = c.Id),
+                    ''
+                ) AS ProductosResumen
+            FROM Compras c
+            ORDER BY c.Fecha DESC;
+            """);
+
+        return compras.ToList();
+    }
+    
+    public async Task<IReadOnlyList<CompraHistorialDetalle>> GetCompraHistorialDetallesAsync(string compraId)
+    {
+        using var connection = database.CreateConnection();
+        var rows = await connection.QueryAsync<CompraHistorialDetalle>(
+            "SELECT * FROM ComprasDetalle WHERE CompraId = @CompraId;",
+            new { CompraId = compraId });
+        return rows.ToList();
+    }
+
+    public async Task<string> ConfirmPurchaseCartAsync(IEnumerable<PurchaseCartItem> cartItems)
+    {
+        using var connection = database.CreateConnection();
+        connection.Open();
+        using var transaction = connection.BeginTransaction();
+
+        var compraId = Guid.NewGuid().ToString();
+        var items = cartItems.ToList();
+        var total = items.Sum(i => i.LineTotal);
+
+        // 1. Insert header
+        await connection.ExecuteAsync("""
+            INSERT INTO Compras (Id, Fecha, Total)
+            VALUES (@Id, @Fecha, @Total);
+            """, new
+        {
+            Id = compraId,
+            Fecha = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
+            Total = total
+        }, transaction);
+
+        // 2. Insert details and update stock/prices
+        foreach (var item in items)
+        {
+            await connection.ExecuteAsync("""
+                INSERT INTO ComprasDetalle (CompraId, ProductoNombre, Cantidad, CostoUnitario, Subtotal)
+                VALUES (@CompraId, @ProductoNombre, @Cantidad, @CostoUnitario, @Subtotal);
+                """, new
+            {
+                CompraId = compraId,
+                ProductoNombre = item.Name,
+                Cantidad = item.Quantity,
+                CostoUnitario = item.CostPrice,
+                Subtotal = item.LineTotal
+            }, transaction);
+
+            // Update Product
+            if (item.ModifySalePrice)
+            {
+                await connection.ExecuteAsync("""
+                    UPDATE Products
+                    SET Stock = Stock + @Quantity,
+                        CostPrice = @CostPrice,
+                        SalePrice = @SalePrice
+                    WHERE Id = @ProductId;
+                    """, new
+                {
+                    item.Quantity,
+                    item.CostPrice,
+                    SalePrice = item.NewSalePrice,
+                    item.ProductId
+                }, transaction);
+            }
+            else
+            {
+                await connection.ExecuteAsync("""
+                    UPDATE Products
+                    SET Stock = Stock + @Quantity,
+                        CostPrice = @CostPrice
+                    WHERE Id = @ProductId;
+                    """, new
+                {
+                    item.Quantity,
+                    item.CostPrice,
+                    item.ProductId
+                }, transaction);
+            }
+        }
+
+        transaction.Commit();
+        return compraId;
+    }
 }

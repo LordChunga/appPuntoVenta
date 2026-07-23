@@ -78,12 +78,33 @@ public sealed partial class MainViewModel : ObservableObject
     private string purchaseProductSearchText = string.Empty;
 
     [ObservableProperty]
-    [NotifyCanExecuteChangedFor(nameof(ConfirmPurchaseCommand))]
+    [NotifyCanExecuteChangedFor(nameof(AddProductToPurchaseCartCommand))]
     private Product? purchaseProduct;
 
     [ObservableProperty]
-    [NotifyCanExecuteChangedFor(nameof(ConfirmPurchaseCommand))]
+    [NotifyCanExecuteChangedFor(nameof(AddProductToPurchaseCartCommand))]
     private int purchaseQuantity = 1;
+
+    [ObservableProperty]
+    private ObservableCollection<CompraHistorial> historialCompras = [];
+
+    [ObservableProperty]
+    private bool isNuevaCompraDialogOpen;
+
+    [ObservableProperty]
+    private ObservableCollection<PurchaseCartItem> purchaseCart = [];
+
+    [ObservableProperty]
+    private decimal purchaseCostPrice;
+
+    [ObservableProperty]
+    private bool purchaseModifySalePrice;
+
+    [ObservableProperty]
+    private decimal purchaseNewSalePrice;
+
+    public decimal PurchaseSubtotal => PurchaseCart.Sum(item => item.LineTotal);
+    public int PurchaseItemsCount => PurchaseCart.Count;
 
 
 
@@ -291,6 +312,7 @@ public sealed partial class MainViewModel : ObservableObject
         await SearchPurchaseProductsAsync();
         await RefreshPosClientsAsync();
         await InitCajaDiariaAsync();
+        await RefreshHistorialComprasAsync();
         SelectedCategory ??= Categories.FirstOrDefault();
         StatusMessage = "Datos cargados.";
     }
@@ -532,22 +554,102 @@ public sealed partial class MainViewModel : ObservableObject
         }
     }
 
-    [RelayCommand(CanExecute = nameof(CanConfirmPurchase))]
-    private async Task ConfirmPurchaseAsync()
-    {
-        if (PurchaseProduct is null)
-        {
-            return;
-        }
+    // ── Compras (Historial y Modal) ──────────────────────────
 
-        await repository.AddStockAsync(PurchaseProduct.Id, PurchaseQuantity);
-        StatusMessage = $"Stock ingresado: {PurchaseProduct.Name} +{PurchaseQuantity}.";
-        PurchaseQuantity = 1;
-        await SearchProductsAsync();
-        await SearchPurchaseProductsAsync();
+    [RelayCommand]
+    private async Task RefreshHistorialComprasAsync()
+    {
+        var compras = await repository.GetHistorialComprasAsync();
+        HistorialCompras = new ObservableCollection<CompraHistorial>(compras);
     }
 
-    private bool CanConfirmPurchase() => PurchaseProduct is not null && PurchaseQuantity > 0;
+    [RelayCommand]
+    private void OpenNuevaCompraDialog()
+    {
+        PurchaseCart.Clear();
+        PurchaseProductSearchText = string.Empty;
+        PurchaseProduct = null;
+        PurchaseQuantity = 1;
+        PurchaseCostPrice = 0;
+        PurchaseModifySalePrice = false;
+        PurchaseNewSalePrice = 0;
+        IsNuevaCompraDialogOpen = true;
+    }
+
+    [RelayCommand]
+    private void CloseNuevaCompraDialog()
+    {
+        IsNuevaCompraDialogOpen = false;
+    }
+
+    partial void OnPurchaseProductChanged(Product? value)
+    {
+        if (value is not null)
+        {
+            PurchaseCostPrice = value.CostPrice;
+            PurchaseModifySalePrice = false;
+            PurchaseNewSalePrice = value.SalePrice;
+            PurchaseQuantity = 1;
+        }
+        AddProductToPurchaseCartCommand.NotifyCanExecuteChanged();
+    }
+
+    private bool CanAddProductToPurchaseCart() => PurchaseProduct is not null && PurchaseQuantity > 0 && PurchaseCostPrice >= 0;
+
+    [RelayCommand(CanExecute = nameof(CanAddProductToPurchaseCart))]
+    private void AddProductToPurchaseCart()
+    {
+        if (PurchaseProduct is null) return;
+
+        var item = new PurchaseCartItem
+        {
+            ProductId = PurchaseProduct.Id,
+            Name = PurchaseProduct.Name,
+            Quantity = PurchaseQuantity,
+            CostPrice = PurchaseCostPrice,
+            ModifySalePrice = PurchaseModifySalePrice,
+            NewSalePrice = PurchaseModifySalePrice ? PurchaseNewSalePrice : PurchaseProduct.SalePrice
+        };
+
+        PurchaseCart.Add(item);
+        OnPropertyChanged(nameof(PurchaseSubtotal));
+        OnPropertyChanged(nameof(PurchaseItemsCount));
+        ConfirmPurchaseCartCommand.NotifyCanExecuteChanged();
+
+        StatusMessage = $"{PurchaseProduct.Name} agregado a la nueva compra.";
+        PurchaseProductSearchText = string.Empty;
+        PurchaseProduct = null;
+    }
+
+    [RelayCommand]
+    private void RemovePurchaseCartItem(PurchaseCartItem? item)
+    {
+        if (item is null) return;
+        PurchaseCart.Remove(item);
+        OnPropertyChanged(nameof(PurchaseSubtotal));
+        OnPropertyChanged(nameof(PurchaseItemsCount));
+        ConfirmPurchaseCartCommand.NotifyCanExecuteChanged();
+    }
+
+    private bool CanConfirmPurchaseCart() => PurchaseCart.Count > 0;
+
+    [RelayCommand(CanExecute = nameof(CanConfirmPurchaseCart))]
+    private async Task ConfirmPurchaseCartAsync()
+    {
+        try
+        {
+            await repository.ConfirmPurchaseCartAsync(PurchaseCart);
+            IsNuevaCompraDialogOpen = false;
+            PurchaseCart.Clear();
+            await RefreshHistorialComprasAsync();
+            await SearchProductsAsync();
+            StatusMessage = "Compra confirmada y stock actualizado.";
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"Error al confirmar compra: {ex.Message}";
+        }
+    }
 
     [RelayCommand(CanExecute = nameof(CanAddSaleSearchToCart))]
     private async Task AddSaleSearchToCartAsync()
