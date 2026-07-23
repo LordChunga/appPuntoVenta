@@ -591,7 +591,15 @@ public sealed partial class MainViewModel : ObservableObject
             PurchaseNewSalePrice = value.SalePrice;
             PurchaseQuantity = 1;
         }
-        AddProductToPurchaseCartCommand.NotifyCanExecuteChanged();
+
+        try
+        {
+            AddProductToPurchaseCartCommand.NotifyCanExecuteChanged();
+        }
+        catch
+        {
+            // Ignore during re-entrant property change cascades
+        }
     }
 
     private bool CanAddProductToPurchaseCart() => PurchaseProduct is not null && PurchaseQuantity > 0 && PurchaseCostPrice >= 0;
@@ -600,6 +608,8 @@ public sealed partial class MainViewModel : ObservableObject
     private void AddProductToPurchaseCart()
     {
         if (PurchaseProduct is null) return;
+
+        var productName = PurchaseProduct.Name;
 
         var item = new PurchaseCartItem
         {
@@ -616,9 +626,12 @@ public sealed partial class MainViewModel : ObservableObject
         OnPropertyChanged(nameof(PurchaseItemsCount));
         ConfirmPurchaseCartCommand.NotifyCanExecuteChanged();
 
-        StatusMessage = $"{PurchaseProduct.Name} agregado a la nueva compra.";
-        PurchaseProductSearchText = string.Empty;
+        // Reset form — null PurchaseProduct first to avoid re-entrant cascade
+        // when SearchPurchaseProductsAsync replaces the collection.
         PurchaseProduct = null;
+        PurchaseProductSearchText = string.Empty;
+
+        StatusMessage = $"{productName} agregado a la nueva compra.";
     }
 
     [RelayCommand]
